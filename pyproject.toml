@@ -13,7 +13,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 
-dependencies = ["requests>=2.32.3"]
+dependencies = ["requests>=2.32.3", "pypdf>= 4.1.0", "PyMuPDF>=1.24.7"]
 
 [project.optional-dependencies]
 coverage = ["covdefaults>=2.1", "coverage"]
