@@ -1,0 +1,69 @@
+[project]
+name = "hybrid_search"
+version = "0.0.1"
+description = "Library for hybrid-search"
+readme = "README.md"
+maintainers = [{ name = "Luca Angioloni", email = "luca.angioloni@aidia.it" }]
+authors = [{ name = "Luca Angioloni", email = "luca.angioloni@aidia.it" }]
+requires-python = "==3.11.*"
+classifiers = [
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = ["requests>=2.32.3"]
+
+[project.optional-dependencies]
+coverage = ["covdefaults>=2.1", "coverage"]
+dev = [
+    "covdefaults>=2.1",
+    "coverage",
+    "debugpy",
+    "grpcio-tools",
+    "ipython",
+    "pdoc",
+    "pre-commit",
+    "pytest",
+    "ruff",
+    "tox",
+    "uv",
+]
+doc = ["pdoc"]
+test = ["coverage", "pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["tests*"]
+
+[tool.ruff]
+line-length = 88
+[tool.ruff.lint]
+# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
+# Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
+# McCabe complexity (`C901`) by default.
+# Added I for iSort.
+select = ["E4", "E7", "E9", "F", "I", "UP", "A", "FA", "SIM", "NPY", "PERF"]
+ignore = []
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.pytest.ini_options]
+norecursedirs = "scripts"
+
+[tool.mypy]
+ignore_missing_imports = true
+strict_optional = true
+no_implicit_optional = true
+warn_unused_ignores = true
+show_column_numbers = true
+show_error_codes = true
+no_implicit_reexport = false
