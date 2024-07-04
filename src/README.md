@@ -129,7 +129,7 @@ Deletes the collection with the given name.
 # Delete a collection
 deleted_collection = search_client.delete_collection("example_collection")
 ```
-### `create_document(self, collection_name: str, document: str)`
+### `create_document(self, collection_name: str, schema: dict)`
 
 Creates a document in the specified collection.
 
@@ -150,7 +150,7 @@ schema = {
 created_document = search_client.create_document("example_collection", document)
 ```
 
-### `create_document_from_file(self, collection_name: str, document: str)`
+### `create_document_from_file(self, collection_name: str,file_path:str, field:str, chunk_size:int, overlap_size:int)`
 
 Creates a document in the specified collection.
 
