@@ -150,14 +150,12 @@ class HybridSearch:
             json=schema,
         )
 
-        return (
-            response.status_code
-            if response.status_code == 200
-            else {
-                "status": response.status_code,
-                "description": json.loads(response.text)["detail"],
-            }
-        )
+        if response.status_code == 200:
+            return {"status": 200, "description": "Document created successfully"}
+        return {
+            "status": int(response.status_code),
+            "description": json.loads(response.text)["detail"],
+        }
 
     def create_document_from_file(
         self,
@@ -166,6 +164,7 @@ class HybridSearch:
         field: str,
         chunk_size: int = 1000,
         overlap_size=200,
+        mode: str = "words",
     ):
         """This function creates a documents from a pdf file
 
@@ -174,8 +173,10 @@ class HybridSearch:
             file_path (str): path to the file
             field (str): field to insert the text
         """
+        if mode not in ["words", "characters"]:
+            raise ValueError("mode should be 'words' or 'characters'")
 
-        chunks = process_pdf_to_chunks(file_path, chunk_size, overlap_size)
+        chunks = process_pdf_to_chunks(file_path, chunk_size, overlap_size, mode)
 
         for chunk in chunks:
             schema = {
@@ -186,9 +187,8 @@ class HybridSearch:
             }
 
             response = self.create_document(collection_name, schema)
-            if response.status_code != 200:
+            if response["status"] != 200:
                 return response
-
         return response
 
     def delete_collection(self, collection_name):

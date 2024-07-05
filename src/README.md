@@ -36,10 +36,10 @@ search_client = HybridSearch(api_key="your_api_key")
 ```
 ### `get_all_collections(self)`
 
-Returns all the collections in the database.
+Returns a list of dict containing the informations of the database.
 
 - **Returns:**
-  - `json`: Response with all the collections.
+  - `[dict]`: Response with all the collections.
 
 - **Example:**
 ```python
@@ -69,7 +69,7 @@ Creates a custom collection in the database.
   - `schema` (json, required): Schema of the collection.
 
 - **Returns:**
-  - `json`: Response of the created collection.
+  - `dict`: Response of the created collection.
 - **Example:**
 ```python
 # Create a custom collection
@@ -92,7 +92,7 @@ Creates a general collection in the database.
   - `collection_name` (str, required): Collection name.
 
 - **Returns:**
-  - `json`: Response of the created collection.
+  - `dict`: Response of the created collection.
 - **Example:**
 ```python
 created_collection = search_client.create_collection(test)
@@ -123,7 +123,7 @@ Deletes the collection with the given name.
   - `collection_name` (str, required): Name of the collection.
 
 - **Returns:**
-  - `json`: Response of the deletion operation.
+  - `dict`: Response of the deletion operation.
 - **Example:**
 ```python
 # Delete a collection
@@ -159,7 +159,8 @@ Creates a document in the specified collection.
   - `file_path` (str, required): Path of the pdf file.
   - `field` (str, required): Field where to insert the the embedding
   - `chunk_size` (int, 1000): chunk size
-  - `overlap_size`(int, 200), Overlap size to
+  - `overlap_size`(int, 200): Overlap size to have more
+  - `mode`(str, words):  mode should be 'words' or 'characters'
 
 - **Returns:**
   - `json`: Response of the document creation.
