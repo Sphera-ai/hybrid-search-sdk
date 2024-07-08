@@ -50,7 +50,7 @@ class HybridSearch:
         )
 
         if response.status_code == 200:
-            return response.json()
+            return {"status": 200, "description": response.json()}
         else:
             return {
                 "status": response.status_code,
@@ -67,12 +67,12 @@ class HybridSearch:
             json: response with the collection information
         """
         response = req.get(
-            f"http://http://{self.url}:{self.port}/collections/{collection_name}",
+            f"http://{self.url}:{self.port}/collections/{collection_name}",
             headers={"x-typesense-api-key": self.api_key},
         )
 
         if response.status_code == 200:
-            return response.json()
+            return {"status": response.status_code, "description": response.json()}
         else:
             return {
                 "status": response.status_code,
@@ -104,7 +104,7 @@ class HybridSearch:
         )
 
         if response.status_code == 200:
-            return response.json()
+            return {"status": response.status_code, "description": response.json()}
         else:
             return {
                 "status": response.status_code,
@@ -118,7 +118,7 @@ class HybridSearch:
         Args:
             collection_name (str, required): Name of the collection
         Returns:
-            response: json
+            response: dict
         """
         response = req.post(
             f"http://{self.url}:{self.port}/create-collection",
@@ -127,7 +127,7 @@ class HybridSearch:
         )
 
         if response.status_code == 200:
-            return response.json()
+            return {"status": response.status_code, "description": response.json()}
         else:
             return {
                 "status": response.status_code,
@@ -206,7 +206,7 @@ class HybridSearch:
         )
 
         if response.status_code == 200:
-            return response.json()
+            return {"status": response.status_code, "description": "Collection deleted"}
         else:
             return {
                 "status": response.status_code,
@@ -232,7 +232,7 @@ class HybridSearch:
             json: response
         """
         response = req.post(
-            "http://localhost:8000/collections-semanticsearch",
+            f"http://{self.url}:{self.port}/collections-semanticsearch",
             headers={"x-typesense-api-key": self.api_key},
             params={
                 "collection_name": collection_name,
@@ -243,7 +243,7 @@ class HybridSearch:
             },
         )
         if response.status_code == 200:
-            return response.json()
+            return {"status": response.status_code, "description": response.json()}
         else:
             return {
                 "status": response.status_code,
@@ -285,24 +285,12 @@ class HybridSearch:
             },
         )
         if response.status_code == 200:
-            return response.json()
+            return {"status": response.status_code, "description": response.json()}
         else:
             return {
                 "status": response.status_code,
                 "description": json.loads(response.text)["detail"],
             }
-
-    def get_schema_attributes(self, collection_name):
-        """This function returns the schema attributes of an existing collection
-
-        Args:
-            collection_name (_type_): Name of the collection
-
-        Returns:
-            response: json
-        """
-
-        pass
 
     def get_model_name(self):
         """This function returns the model name used to embed
@@ -316,7 +304,7 @@ class HybridSearch:
         )
 
         if response.status_code == 200:
-            return response.json()
+            return {"status": response.status_code, "description": response.json()}
         else:
             return {
                 "status": response.status_code,
@@ -335,7 +323,7 @@ class HybridSearch:
         )
 
         if response.status_code == 200:
-            return response.json()
+            return {"status": response.status_code, "description": response.json()}
         else:
             return {
                 "status": response.status_code,

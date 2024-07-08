@@ -7,7 +7,6 @@ The `HybridSearch` class provides a convenient interface to interact with a micr
 ## Initialization
 
 ### `__init__(self, api_key: str, url: str = "localhost", port: int = 8000)`
-
 Initializes the `HybridSearch` class.
 
 - **Parameters:**
@@ -17,8 +16,8 @@ Initializes the `HybridSearch` class.
 
 - **Example:**
 ```python
-# Check API key validity
-search_client.check_api_key()
+# Initialize the search client
+search_client = HybridSearch(api_key="your_api_key")
 ```
 ## Methods
 
@@ -29,22 +28,27 @@ Checks if the provided API key is valid.
 - **Raises:**
   - `Exception`: If the API key is invalid.
 
-- **Example:**
 ```python
-# Initialize the search client
-search_client = HybridSearch(api_key="your_api_key")
+# Check API key validity
+search_client.check_api_key()
 ```
-### `get_all_collections(self)`
 
+- **Example:**
+### `get_all_collections(self)`
 Returns a list of dict containing the informations of the database.
 
 - **Returns:**
-  - `[dict]`: Response with all the collections.
+```
+  {
+    "status": int,
+    "description": list[dict] | str   # list of collection or error string
+  }
+```
 
 - **Example:**
 ```python
 # Get all collections
-collections = search_client.get_all_collections()
+status_code, collections = search_client.get_all_collections()
 ```
 ### `get_collection(self, collection_name)`
 
@@ -54,22 +58,34 @@ Returns the collection with the given name.
   - `collection_name` (str, required): Name of the collection.
 
 - **Returns:**
-  - `json`: Response with the collection information.
+```
+  {
+    "status": int,
+    "description": dict | str   # Collection or error string
+  }
+```
 - **Example:**
 ```python
 # Get a specific collection
-collection_info = search_client.get_collection("example_collection")
+status_code,collection_info = search_client.get_collection("example_collection")
 ```
-### `create_custom_collection(self, schema)`
+### `create_custom_collection(self, embedding_field, model_name, schema)`
 Creates a custom collection in the database.
 
 - **Parameters:**
   - `embedding_field` (str, required): field to embed using the model.
   - `model_name` (str, required): model_name to be used to embed the field.
-  - `schema` (json, required): Schema of the collection.
+  - `schema` (dict, required): Schema of the collection.
+
+models names can be retrieved using the function `get_model_name()`
 
 - **Returns:**
-  - `dict`: Response of the created collection.
+```
+  {
+    "status": int,
+    "description": dict | str   # list of collection or error string
+  }
+```
 - **Example:**
 ```python
 # Create a custom collection
@@ -83,19 +99,24 @@ schema = {
 
 created_collection = search_client.create_custom_collection(schema)
 ```
-
-
 ### `create_collection(self, collection_name)`
 Creates a general collection in the database.
 
 - **Parameters:**
   - `collection_name` (str, required): Collection name.
 
+By default the field named `text` will be used to be embedded.
+
 - **Returns:**
-  - `dict`: Response of the created collection.
+```
+  {
+    "status": int,
+    "description": dict | str   # list of collection or error string
+  }
+```
 - **Example:**
 ```python
-created_collection = search_client.create_collection(test)
+status_code, created_collection = search_client.create_collection(test)
 
 # Example of collection that will be created
 schema = {
@@ -123,7 +144,12 @@ Deletes the collection with the given name.
   - `collection_name` (str, required): Name of the collection.
 
 - **Returns:**
-  - `dict`: Response of the deletion operation.
+```
+  {
+    "status": int,
+    "description": str
+  }
+```
 - **Example:**
 ```python
 # Delete a collection
@@ -138,7 +164,8 @@ Creates a document in the specified collection.
   - `schema` (dict, required): schema of the document to be inserted.
 
 - **Returns:**
-  - `json`: Response of the document creation.
+```{"status": int,"description": str}```
+
 - **Example:**
 ```python
 # Create a document
@@ -150,7 +177,7 @@ schema = {
 created_document = search_client.create_document("example_collection", document)
 ```
 
-### `create_document_from_file(self, collection_name: str,file_path:str, field:str, chunk_size:int, overlap_size:int)`
+### `create_document_from_file(self, collection_name: str,file_path:str, field:str, chunk_size:int, overlap_size:int, mode=str)`
 
 Creates a document in the specified collection.
 
@@ -163,14 +190,15 @@ Creates a document in the specified collection.
   - `mode`(str, words):  mode should be 'words' or 'characters'
 
 - **Returns:**
-  - `json`: Response of the document creation.
+``` {"status": int, description": str } ```
+
 - **Example:**
 ```python
-created_document = search_client.create_document("example_collection", document)
+status_code,created_document = search_client.create_document("example_collection","./test.pdf","text")
 
 ```
 
-### `semantic_search(self, collection_name: str, query: str, num_results: int)`
+### `semantic_search(self, collection_name: str, query: str, num_results: int, rerank:bool, rerank_model:str)`
 
 Performs a semantic search on the specified collection.
 
@@ -178,15 +206,25 @@ Performs a semantic search on the specified collection.
   - `collection_name` (str, required): Name of the collection.
   - `query` (str, required): Query to search.
   - `num_results` (int, required): Number of results to return.
+  - `rerank` (bool, optional): If true it execute the reranking of the resultsm using the selected rerank model. Default False.
+  - `rerank_model` (str, optional): Name of the rerank model, if rerank is true then this paramter is required.
+
+Available rerank models can be retrieved using the function `get_rerank_model_name`
 
 - **Returns:**
-  - `json`: Response of the semantic search.
+```
+  {
+    "status": int,
+    "description": list[dict] | str   # list of results or error string
+  }
+```
 - **Example:**
 ```python
 # Perform a semantic search
-semantic_search_results = search_client.semantic_search("example_collection", "example query", 5)
+status_code, semantic_search_results = search_client.semantic_search("example_collection", "example query", 5)
 ```
-### `hybrid_search(self, collection_name: str, query: str, num_results: int, field: str)`
+
+### `hybrid_search(self, collection_name: str, query: str, num_results: int, field: str, rerank:bool, rerank_model:str)`
 
 Performs a hybrid search on the specified collection, combining semantic search and full-text search on user-specified fields.
 
@@ -195,66 +233,63 @@ Performs a hybrid search on the specified collection, combining semantic search 
   - `query` (str, required): Query to search.
   - `num_results` (int, required): Number of results to return.
   - `field` (str, required): Fields to search.
+  - `rerank` (bool, optional): If true it execute the reranking of the resultsm using the selected rerank model. Default False.
+  - `rerank_model` (str, optional): Name of the rerank model, if rerank is true then this paramter is required.
+
+- Available rerank models can be retrieved using the function `get_rerank_model_name`
+- If you want to select multiple field for the hybrid-search, seperates the fields using a comma. `field1, field2, ..`
 
 - **Returns:**
-  - `json`: Response of the hybrid search.
+```
+  {
+    "status": int,
+    "description": list[dict] | str   # list of results or error string
+  }
+```
 - **Example:**
 ```python
 # Perform a hybrid search
-hybrid_search_results = search_client.hybrid_search("example_collection", "example query", 5, "title")
+status_code, hybrid_search_results = search_client.hybrid_search("example_collection", "example query", 5, "title")
 
 ```
-### `get_schema_attributes(self, collection_name)`
 
-Returns the schema attributes of an existing collection.
-
-- **Parameters:**
-  - `collection_name` (str, required): Name of the collection.
-
-- **Returns:**
-  - `json`: Response with the schema attributes of the collection.
-
-- **Example:**
-```python
-# Get schema attributes
-schema_attributes = search_client.get_schema_attributes("example_collection")
-```
 ### `get_model_name(self)`
-
 Returns the models name used to do embedding.
 
-
 - **Returns:**
-  - `json`: Response with the list of all the embeddings
-
+```
+  {
+    "status": int,
+    "description": list[dict] | str   # list of results or error string
+  }
+```
 - **Example:**
 ```python
 # Get schema attributes
 model_names = search_client.get_model_name()
 ```
 
-### `create_document_from_file(self, collection_name: str, file_path: str, field: string, chunk_size: int, overlap_size:int)`
+### `get_rerank_model_name(self)`
+Returns the models name used to do rerank.
 
-Create document starting from a pdf.
-- **Parameters**
-    - `collection_name` (str, required): Name of the collection.
-    - `file_path`: str,  Path to the pdf file
-    - `chunk_size`: int,Size of the chunks
-    - `overlap_size`: int, Size of the overlap between chunks
 - **Returns:**
-  - `int`: Status code of the response
-
+```
+  {
+    "status": int,
+    "description": list[dict] | str   # list of results or error string
+  }
+```
 - **Example:**
 ```python
 # Get schema attributes
-model_names = search_client.create_document_from_file("example_collection", "./test.pdf", "text", 1000, 200)
+model_names = search_client.get_model_name()
 ```
 
 
 # Preprocessing Documentation
 
 ## Method
-### `preprocess_text(self, pdf_path: str, chunk_size: int, overlap_size:int)`
+### `process_pdf_to_chunks(self, pdf_path: str, chunk_size: int, overlap_size:int)`
 
 This function creates chunks of text starting from a pdf given in input
 
@@ -263,10 +298,18 @@ This function creates chunks of text starting from a pdf given in input
   - `chunk_size`:  chunk size (default:1000)
   - `overlap_size`: overlap size, to give more
 - **Returns:**
-  - `string[]`: List of chunks
+  - `list[dict]`:
+  ```
+  [{
+    "page": int,
+    "start_line": int,
+    "end_line":int,
+    "text": str
+  },]
+  ```
 
 - **Example:**
 ```python
 # Get schema attributes
-model_names = search_client.create_document_from_file("example_collection", "./test.pdf", "text", 1000, 200)
+model_names = search_client.process_pdf_to_chunks("example_collection", "./test.pdf", "text", 1000, 200)
 ```
