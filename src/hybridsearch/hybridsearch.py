@@ -292,6 +292,51 @@ class HybridSearch:
                 "description": json.loads(response.text)["detail"],
             }
 
+    def hybrid_search_filter(
+        self,
+        collection_name: str,
+        query: str,
+        num_results: int,
+        field: str,
+        rerank: bool = False,
+        rerank_model: str = None,
+        filters: dict = None,
+    ):
+        """This function performs a hybrid search on the collection, combining semantic search and full text search
+        on a field or fields choose by the user
+
+        Args:
+            collection_name (str): Name of the collection
+            query (str): Query to search
+            num_results (int): Number of results
+            field (str): fields to search
+            rerank (bool, optional): If True, rerank the results. Defaults to False.
+            rerank_model (str, optional): Model to rerank the results. Defaults to None.
+        Returns:
+            response: json
+        """
+
+        response = req.post(
+            f"http://{self.url}:{self.port}/hybridsearch_filter/",
+            headers={"x-typesense-api-key": self.api_key},
+            params={
+                "collection_name": collection_name,
+                "query": query,
+                "num_results": num_results,
+                "search_field": field,
+                "rerank": rerank,
+                "rerank_model": rerank_model,
+            },
+            json=filters,
+        )
+        if response.status_code == 200:
+            return {"status": response.status_code, "description": response.json()}
+        else:
+            return {
+                "status": response.status_code,
+                "description": json.loads(response.text)["detail"],
+            }
+
     def get_model_name(self):
         """This function returns the model name used to embed
 
