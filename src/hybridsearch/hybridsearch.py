@@ -300,7 +300,7 @@ class HybridSearch:
         field: str,
         rerank: bool = False,
         rerank_model: str = None,
-        filters: dict = None,
+        filters: list = None,
     ):
         """This function performs a hybrid search on the collection, combining semantic search and full text search
         on a field or fields choose by the user
@@ -316,19 +316,21 @@ class HybridSearch:
             response: json
         """
 
+        payload = {
+            "collection_name": collection_name,
+            "query": query,
+            "num_results": num_results,
+            "search_field": field,
+            "rerank": rerank,
+            "rerank_model": rerank_model,
+            "filters": filters,
+        }
         response = req.post(
             f"http://{self.url}:{self.port}/hybridsearch_filter/",
             headers={"x-typesense-api-key": self.api_key},
-            params={
-                "collection_name": collection_name,
-                "query": query,
-                "num_results": num_results,
-                "search_field": field,
-                "rerank": rerank,
-                "rerank_model": rerank_model,
-            },
-            json=filters,
+            json=payload,
         )
+
         if response.status_code == 200:
             return {"status": response.status_code, "description": response.json()}
         else:
