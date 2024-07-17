@@ -185,9 +185,12 @@ Creates a document in the specified collection.
   - `collection_name` (str, required): Name of the collection.
   - `file_path` (str, required): Path of the pdf file.
   - `field` (str, required): Field where to insert the the embedding
-  - `chunk_size` (int, 1000): chunk size
-  - `overlap_size`(int, 200): Overlap size to have more
-  - `mode`(str, words):  mode should be 'words' or 'characters'
+  - `chunk_mode` (str): "naive" or "semantic", default: "naive".
+  - `chunk_size` (int): chunk size, default 1000.
+  - `overlap_size`(int): Overlap size to have more, default 200.
+  - `mode`(str):  mode should be 'words' or 'characters', defualt: "words".
+  - `model_to_semantic_chunk`(str):  model used to execute semanti chunking. Default "paraphrase-multilingual-MiniLM-L12-v2"
+
 
 - **Returns:**
 ``` {"status": int, description": str } ```

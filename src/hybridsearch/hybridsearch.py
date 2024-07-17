@@ -4,7 +4,7 @@ import json
 
 import requests as req
 
-from .preprocessing import process_pdf_to_chunks
+from .preprocessing import NaiveChunking, SemanticChunking
 
 
 class HybridSearch:
@@ -162,9 +162,11 @@ class HybridSearch:
         collection_name: str,
         file_path: str,
         field: str,
+        chunk_mode: str = "naive",  # naive or semantic
         chunk_size: int = 1000,
         overlap_size=200,
         mode: str = "words",
+        model_to_semantic_chunk: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
     ):
         """This function creates a documents from a pdf file
 
@@ -173,10 +175,22 @@ class HybridSearch:
             file_path (str): path to the file
             field (str): field to insert the text
         """
-        if mode not in ["words", "characters"]:
-            raise ValueError("mode should be 'words' or 'characters'")
 
-        chunks = process_pdf_to_chunks(file_path, chunk_size, overlap_size, mode)
+        if chunk_mode not in ["naive", "semantic"]:
+            raise ValueError("chunk_mode should be 'naive' or 'semantic'")
+
+        if chunk_mode == "semantic":
+            if model_to_semantic_chunk == "":
+                raise ValueError("model_to_semantic_chunk should be provided")
+
+            chunker = SemanticChunking(file_path, model_to_semantic_chunk)
+            chunks, _ = chunker.create_chunks()
+
+        if chunk_mode == "naive":
+            if mode not in ["words", "characters"]:
+                raise ValueError("mode should be 'words' or 'characters'")
+            chunker = NaiveChunking(file_path, chunk_size, overlap_size, mode)
+            chunks = chunker.create_chunks()
 
         for chunk in chunks:
             schema = {
