@@ -44,6 +44,7 @@ Returns a list of dict containing the informations of the database.
     "description": list[dict] | str   # list of collection or error string
   }
 ```
+status code: [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#get-collection)
 
 - **Example:**
 ```python
@@ -60,10 +61,12 @@ Returns the collection with the given name.
 - **Returns:**
 ```
   {
-    "status": int,
+    "status": int, 
     "description": dict | str   # Collection or error string
   }
 ```
+status code : [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#get-collection)
+
 - **Example:**
 ```python
 # Get a specific collection
@@ -86,6 +89,7 @@ models names can be retrieved using the function `get_model_name()`
     "description": dict | str   # list of collection or error string
   }
 ```
+status code : [link] (https://github.com/Sphera-ai/hybrid-search/tree/main/search#create-custom-collection)
 - **Example:**
 ```python
 # Create a custom collection
@@ -114,6 +118,7 @@ By default the field named `text` will be used to be embedded.
     "description": dict | str   # list of collection or error string
   }
 ```
+status code : [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#create-collection)
 - **Example:**
 ```python
 status_code, created_collection = search_client.create_collection(test)
@@ -150,6 +155,7 @@ Deletes the collection with the given name.
     "description": str
   }
 ```
+status code : [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#delete-collection)
 - **Example:**
 ```python
 # Delete a collection
@@ -165,7 +171,7 @@ Creates a document in the specified collection.
 
 - **Returns:**
 ```{"status": int,"description": str}```
-
+status code : [link] (https://github.com/Sphera-ai/hybrid-search/tree/main/search#create-document)
 - **Example:**
 ```python
 # Create a document
@@ -200,6 +206,8 @@ Creates a document in the specified collection.
 status_code,created_document = search_client.create_document("example_collection","./test.pdf","text")
 
 ```
+status code : [link] (https://github.com/Sphera-ai/hybrid-search/tree/main/search#create-document)
+
 
 ### `semantic_search(self, collection_name: str, query: str, num_results: int, rerank:bool, rerank_model:str)`
 
@@ -221,6 +229,7 @@ Available rerank models can be retrieved using the function `get_rerank_model_na
     "description": list[dict] | str   # list of results or error string
   }
 ```
+status code : [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#perform-semantic-search)
 - **Example:**
 ```python
 # Perform a semantic search
@@ -249,6 +258,7 @@ Performs a hybrid search on the specified collection, combining semantic search 
     "description": list[dict] | str   # list of results or error string
   }
 ```
+status code : [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#perform-hybrid-search)
 - **Example:**
 ```python
 # Perform a hybrid search
@@ -271,7 +281,7 @@ Returns the models name used to do embedding.
 # Get schema attributes
 model_names = search_client.get_model_name()
 ```
-
+status code : [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#get-embedding-models)
 ### `get_rerank_model_name(self)`
 Returns the models name used to do rerank.
 
@@ -282,6 +292,7 @@ Returns the models name used to do rerank.
     "description": list[dict] | str   # list of results or error string
   }
 ```
+status code : [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#get-reranking-models)
 - **Example:**
 ```python
 # Get schema attributes
