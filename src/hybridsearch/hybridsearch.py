@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import os
+from asyncio.log import logger
 
 import requests as req
 
+from .models import Document
 from .preprocessing import NaiveChunking, SemanticChunking
 
 
@@ -135,11 +137,12 @@ class HybridSearch:
                 "description": json.loads(response.text)["detail"],
             }
 
-    def create_document(self, collection_name: str, schema: dict):
+    def create_document(self, collection_name: str, schema: Document):
         """This function creates a document in the collection
 
         Args:
             collection_name (str): Name of the collection
+            schema (dict): schema of the preprocesseing and pdf urls
 
         Returns:
             json: response
@@ -158,122 +161,32 @@ class HybridSearch:
             "description": json.loads(response.text)["detail"],
         }
 
-    def create_document_from_file(
-        self,
-        collection_name: str,
-        file_path: str,
-        field: str,
-        chunk_mode: str = "naive",  # naive or semantic
-        chunk_size: int = 1000,
-        overlap_size=200,
-        mode: str = "words",
-        model_to_semantic_chunk: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-    ):
-        """This function creates documents from a pdf file
+    def delete_document(self, collection_name: str, field: str, document_id: str):
+        """This function deletes a document in the collection
 
         Args:
-            collection_name (str): collection name
-            file_path (str): path to the file
-            field (str): field to insert the text
-            chunk_mode (str, optional): chunk mode. Defaults to "naive".
-            chunk_size (int, optional): chunk size. Defaults to 1000.
-            overlap_size (int, optional): overlap size. Defaults to 200.
-            mode (str, optional): mode. Defaults to "words".
-            model_to_semantic_chunk (str, optional): model to semantic chunk. Defaults to "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2".
+            collection_name (str): Name of the collection
+            document_id (str): Id of the document
+
+        Returns:
+            json: response
         """
+        response = req.delete(
+            f"http://{self.url}:{self.port}/delete-document",
+            headers={"x-typesense-api-key": self.api_key},
+            params={
+                "name": collection_name,
+                "document_id": document_id,
+                "field": field,
+            },
+        )
 
-        if chunk_mode not in ["naive", "semantic"]:
-            raise ValueError("chunk_mode should be 'naive' or 'semantic'")
-
-        if chunk_mode == "semantic":
-            if model_to_semantic_chunk == "":
-                raise ValueError("model_to_semantic_chunk should be provided")
-
-            chunker = SemanticChunking(file_path, model_to_semantic_chunk)
-            chunks, _ = chunker.create_chunks()
-
-        if chunk_mode == "naive":
-            if mode not in ["words", "characters"]:
-                raise ValueError("mode should be 'words' or 'characters'")
-            chunker = NaiveChunking(file_path, chunk_size, overlap_size, mode)
-            chunks = chunker.create_chunks()
-
-        for chunk in chunks:
-            schema = {
-                field: chunk["text"],
-                "page": chunk["page"],
-                "start_line": chunk["start_line"],
-                "end_line": chunk["end_line"],
-            }
-    
-            response = self.create_document(collection_name, schema)
-            if response["status"] != 200:
-                return response
-        return response
-
-    def create_documents_for_list(
-        self,
-        collection_name: str,
-        url_list: list,
-        field: str,
-        chunk_mode: str = "naive",  # naive or semantic
-        chunk_size: int = 1000,
-        overlap_size=200,
-        mode: str = "words",
-        model_to_semantic_chunk: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-    ):
-        """This function creates documents from a list of urls
-
-        Args:
-            collection_name (str): collection name
-            list (list): list of urls
-            field (str): field to insert the text
-            chunk_mode (str, optional): chunk mode. Defaults to "naive".
-            chunk_size (int, optional): chunk size. Defaults to 1000.
-            overlap_size (int, optional): overlap size. Defaults to 200.
-            mode (str, optional): mode. Defaults to "words".
-            model_to_semantic_chunk (str, optional): model to semantic chunk. Defaults to "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2".
-        """
-
-        if chunk_mode not in ["naive", "semantic"]:
-            raise ValueError("chunk_mode should be 'naive' or 'semantic'")
-
-        # create a .tmp folder where the files are donwloaded
-        if not os.path.exists(".tmp"):
-            os.makedirs(".tmp")
-
-        for url in url_list:
-            # download the files
-            response = req.get(url)
-            pdf_name = url.split("/")[-1]
-            with open(f".tmp/{pdf_name}", "wb") as f:
-                f.write(response.content)
-
-        pdfs = os.listdir(".tmp")
-        list_response = []
-        for pdf in pdfs:
-            response = self.create_document_from_file(
-                collection_name,
-                f".tmp/{pdf}",
-                field,
-                chunk_mode,
-                chunk_size,
-                overlap_size,
-                mode,
-                model_to_semantic_chunk,
-            )
-            list_response.append(response)
-
-        # create a dict with the response for each pdf
-        response = {}
-        for i, pdf in enumerate(pdfs):
-            response[pdf] = list_response[i]
-        # delete the .tmp folder and the contents
-        for pdf in pdfs:
-            os.remove(f".tmp/{pdf}")
-        os.rmdir(".tmp")
-
-        return response
+        if response.status_code == 200:
+            return {"status": 200, "description": "Document deleted successfully"}
+        return {
+            "status": int(response.status_code),
+            "description": json.loads(response.text)["detail"],
+        }
 
     def delete_collection(self, collection_name):
         """This function deletes the collection with the given name
@@ -460,3 +373,173 @@ class HybridSearch:
                 "status": response.status_code,
                 "description": json.loads(response.text)["detail"],
             }
+
+    # def create_documents_for_list(
+    #     self,
+    #     collection_name: str,
+    #     url_list: list,
+    #     field: str,
+    #     chunk_mode: str = "naive",  # naive or semantic
+    #     chunk_size: int = 1000,
+    #     overlap_size=200,
+    #     mode: str = "words",
+    #     model_to_semantic_chunk: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    # ):
+    #     """This function creates documents from a list of urls
+
+    #     Args:
+    #         collection_name (str): collection name
+    #         list (list): list of urls
+    #         field (str): field to insert the text
+    #         chunk_mode (str, optional): chunk mode. Defaults to "naive".
+    #         chunk_size (int, optional): chunk size. Defaults to 1000.
+    #         overlap_size (int, optional): overlap size. Defaults to 200.
+    #         mode (str, optional): mode. Defaults to "words".
+    #         model_to_semantic_chunk (str, optional): model to semantic chunk. Defaults to "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2".
+    #     """
+
+    #     if chunk_mode not in ["naive", "semantic"]:
+    #         raise ValueError("chunk_mode should be 'naive' or 'semantic'")
+
+    #     # create a .tmp folder where the files are donwloaded
+    #     if not os.path.exists(".tmp"):
+    #         os.makedirs(".tmp")
+
+    #     for url in url_list:
+    #         # download the files
+    #         response = req.get(url)
+    #         pdf_name = url.split("/")[-1]
+    #         with open(f".tmp/{pdf_name}", "wb") as f:
+    #             f.write(response.content)
+
+    #     pdfs = os.listdir(".tmp")
+    #     list_response = []
+    #     for pdf in pdfs:
+    #         response = self.create_document_from_file(
+    #             collection_name,
+    #             f".tmp/{pdf}",
+    #             field,
+    #             chunk_mode,
+    #             chunk_size,
+    #             overlap_size,
+    #             mode,
+    #             model_to_semantic_chunk,
+    #         )
+    #         list_response.append(response)
+
+    #     # create a dict with the response for each pdf
+    #     response = {}
+    #     for i, pdf in enumerate(pdfs):
+    #         response[pdf] = list_response[i]
+    #     # delete the .tmp folder and the contents
+    #     for pdf in pdfs:
+    #         os.remove(f".tmp/{pdf}")
+    #     os.rmdir(".tmp")
+
+    #     return response
+
+    # def create_document_from_document(self, collection_name: str, pdf_file):
+    #     """This function creates a document in the collection
+
+    #     Args:
+    #         collection_name (str): Name of the collection
+
+    #     Returns:
+    #         json: response
+    #     """
+    #     response = req.post(
+    #         f"http://{self.url}:{self.port}/create-document_1",
+    #         headers={"x-typesense-api-key": self.api_key},
+    #         params={"name": collection_name},
+    #         files={"file": pdf_file},
+    #     )
+
+    #     if response.status_code == 200:
+    #         return {"status": 200, "description": "Document sent successfully"}
+    #     return {
+    #         "status": int(response.status_code),
+    #         "description": json.loads(response.text)["detail"],
+    #     }
+
+    # def create_document_from_list(
+    #     self, collection_name: str, urls: list, preprocessing: dict
+    # ):
+    #     schema = {}
+    #     # insert urls in the schema
+    #     urls_ = []
+    #     for i, url in enumerate(urls):
+    #         urls_.append(url)
+
+    #     schema["urls"] = urls_
+    #     schema.update({key: value for key, value in preprocessing.items()})
+
+    #     response = req.post(
+    #         f"http://{self.url}:{self.port}/create-document_1/",
+    #         headers={"x-typesense-api-key": self.api_key},
+    #         params={"name": collection_name},
+    #         json=schema,  # Ensure that you're using `json=` to send the body as JSON
+    #     )
+
+    #     if response.status_code == 200:
+    #         return {"status": 200, "description": "Document sent successfully"}
+    #     return {
+    #         "status": int(response.status_code),
+    #         "description": json.loads(response.text)["detail"],
+    #     }
+
+    # def create_document_from_file(
+    #     self,
+    #     collection_name: str,
+    #     file_path: str,
+    #     field: str,
+    #     chunk_mode: str = "naive",  # naive or semantic
+    #     chunk_size: int = 1000,
+    #     overlap_size=200,
+    #     mode: str = "words",
+    #     model_to_semantic_chunk: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    # ):
+    #     """This function creates documents from a pdf file
+
+    #     Args:
+    #         collection_name (str): collection name
+    #         file_path (str): path to the file
+    #         field (str): field to insert the text
+    #         chunk_mode (str, optional): chunk mode. Defaults to "naive".
+    #         chunk_size (int, optional): chunk size. Defaults to 1000.
+    #         overlap_size (int, optional): overlap size. Defaults to 200.
+    #         mode (str, optional): mode. Defaults to "words".
+    #         model_to_semantic_chunk (str, optional): model to semantic chunk. Defaults to "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2".
+    #     """
+
+    #     if chunk_mode not in ["naive", "semantic"]:
+    #         raise ValueError("chunk_mode should be 'naive' or 'semantic'")
+
+    #     if chunk_mode == "semantic":
+    #         if model_to_semantic_chunk == "":
+    #             raise ValueError("model_to_semantic_chunk should be provided")
+
+    #         chunker = SemanticChunking(file_path, model_to_semantic_chunk)
+    #         chunks, _ = chunker.create_chunks()
+
+    #     if chunk_mode == "naive":
+    #         if mode not in ["words", "characters"]:
+    #             raise ValueError("mode should be 'words' or 'characters'")
+
+    #         try:
+    #             chunker = NaiveChunking(file_path, chunk_size, overlap_size, mode)
+    #         except Exception as e:
+    #             logger.error(f"Error in naive chunking: {str(e)}")
+    #         chunks = chunker.create_chunks()
+
+    #     for chunk in chunks:
+    #         schema = {
+    #             field: chunk["text"],
+    #             "page": chunk["page"],
+    #             "start_line": chunk["start_line"],
+    #             "end_line": chunk["end_line"],
+    #         }
+
+    #         response = self.create_document(collection_name, schema)
+    #         if response["status"] != 200:
+    #             return response
+    #     return response

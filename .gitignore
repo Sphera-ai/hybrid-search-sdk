@@ -162,3 +162,7 @@ cython_debug/
 #.idea/
 
 .ruff_cache/
+
+*.tmp/
+
+*tests/*

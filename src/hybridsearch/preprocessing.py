@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+import os
 import re
 
 import fitz  # PyMuPDF
 import numpy as np
 
 # import pypdf as pypdf
-# from semantic_chunkers import StatisticalChunker
-# from semantic_router.encoders import HuggingFaceEncoder
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
+
+os.environ["TESSDATA_PREFIX"] = os.getenv("TESSDATA_PREFIX")
+TESSDATA_PREFIX = os.getenv("TESSDATA_PREFIX")
 
 
 class Chunking:
@@ -45,6 +47,18 @@ class Chunking:
             page = doc.load_page(page_num)
             text = page.get_text("text")
 
+            if text == "":
+                text = (
+                    doc[page_num]
+                    .get_textpage_ocr(
+                        flags=3,
+                        language="ita",
+                        dpi=72,
+                        full=False,
+                        tessdata=TESSDATA_PREFIX,
+                    )
+                    .extractTEXT()
+                )
             lines = re.split(r"(?<=[.?!])\s+", text)
 
             for line_num, line in enumerate(lines):
@@ -393,35 +407,3 @@ class SemanticChunking(Chunking):
             sentences[i]["combined_sentence"] = combined_sentence
 
         return sentences
-
-
-# def SemanticStatisticalChunking(
-#     pdf_path: str,
-#     model_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-# ):
-#     """
-#     This function uses the StatisticalChunker to chunk the text
-#     into meaningful chunks. Use semantic_chunkers library.
-#     github: https://github.com/aurelio-labs/semantic-chunkers.git
-#     """
-#     text = document_reader(pdf_path)
-
-#     t_ = ""
-#     for t in text:
-#         t_ += t["sentence"]
-
-#     class myModel(HuggingFaceEncoder):
-#         """
-#         Cuustom class to use the HuggingFaceEncoder with custom model name
-#         """
-
-#         name = model_name
-
-#     encoder = myModel()
-#     chunker = StatisticalChunker(encoder=encoder)
-
-#     chunks = chunker(docs=[t_])
-
-#     list_chunks = [{"text": chunk.content} for chunk in chunks[0]]
-
-#     return list_chunks
