@@ -7,7 +7,6 @@ from asyncio.log import logger
 import requests as req
 
 from .models import Document
-from .preprocessing import NaiveChunking, SemanticChunking
 
 
 class HybridSearch:
