@@ -142,7 +142,7 @@ class HybridSearch:
         Args:
             collection_name (str): Name of the collection
             schema (dict): schema of the preprocesseing and pdf urls
-
+            
         Returns:
             json: response
         """

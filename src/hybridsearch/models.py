@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import List
 
 from pydantic import BaseModel, Field, validator
 
@@ -25,6 +24,8 @@ class Document(BaseModel):
     chunk_mode: ChunkMod
     chunk_size: int
     overlap_size: int
-    mode: str
-    model_to_semantic_chunk: str # sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
-    urls: List[str]
+    mode: WordCharcter
+    model_to_semantic_chunk: (
+        str  # sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+    )
+    urls: list[str]
