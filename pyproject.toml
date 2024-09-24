@@ -5,21 +5,14 @@ description = "Library for hybrid-search"
 readme = "README.md"
 maintainers = [{ name = "Luca Angioloni", email = "luca.angioloni@aidia.it" }]
 authors = [{ name = "Luca Angioloni", email = "luca.angioloni@aidia.it" }]
-requires-python = "==3.11.*"
+requires-python = ">=3"
 classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.11",
 ]
 
-dependencies = [
-    "requests>=2.32.3",
-    # "pypdf>= 4.1.0",
-    "PyMuPDF>=1.24.7",
-    #"scikit-learn>=1.5.1",
-    #"sentence-transformers>=3.0.1",
-]
+dependencies = ["requests>=2.32.3"]
 
 [project.optional-dependencies]
 coverage = ["covdefaults>=2.1", "coverage"]
