@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import json
-import os
-from asyncio.log import logger
 
 import requests as req
 
+from .exceptions import CollectionNotFound, DocumentCreationFailed, InvalidApiKey
 from .models import Document
 
 
@@ -38,7 +37,7 @@ class HybridSearch:
             headers={"x-typesense-api-key": self.api_key},
         ).status_code
         if status_code != 200:
-            raise Exception("Invalid API Key")
+            raise InvalidApiKey("Invalid API key")
 
     def get_all_collections(self):
         """This function returns all the collections in the database
@@ -50,6 +49,12 @@ class HybridSearch:
             f"http://{self.url}:{self.port}/collections",
             headers={"x-typesense-api-key": self.api_key},
         )
+        if response.status_code == 401:
+            raise InvalidApiKey("Invalid API key")
+        if response.status_code == 404:
+            raise CollectionNotFound("No collection found")
+        
+        
 
         if response.status_code == 200:
             return {"status": 200, "description": response.json()}
@@ -142,30 +147,30 @@ class HybridSearch:
         Args:
             collection_name (str): Name of the collection
             schema (dict): schema of the preprocesseing and pdf urls
-            
+
         Returns:
             json: response
         """
         response = req.post(
-            f"http://{self.url}:{self.port}/create-document",
+            f"http://{self.url}:{self.port}/create-document/",
             headers={"x-typesense-api-key": self.api_key},
             params={"name": collection_name},
             json=schema,
         )
-
-        if response.status_code == 200:
+        if response.status_code == 404:
+            raise CollectionNotFound(collection_name)
+        elif response.status_code == 400:
+            raise DocumentCreationFailed(json.loads(response.text)["detail"])
+        else:
             return {"status": 200, "description": "Document created successfully"}
-        return {
-            "status": int(response.status_code),
-            "description": json.loads(response.text)["detail"],
-        }
 
-    def delete_document(self, collection_name: str, field: str, document_id: str):
+    def delete_document(self, collection_name: str, field: str, pdf_id: str):
         """This function deletes a document in the collection
 
         Args:
             collection_name (str): Name of the collection
-            document_id (str): Id of the document
+            field (str): field name to search the pdf document
+            pdf_id (str): Id of the pdf document
 
         Returns:
             json: response
@@ -175,7 +180,7 @@ class HybridSearch:
             headers={"x-typesense-api-key": self.api_key},
             params={
                 "name": collection_name,
-                "document_id": document_id,
+                "document_id": pdf_id,
                 "field": field,
             },
         )

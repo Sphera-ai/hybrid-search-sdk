@@ -30,4 +30,5 @@ class Document(BaseModel):
     model_to_semantic_chunk: str = (
         "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     )
-    urls: conset(str, min_length=1)  # type: ignore
+    urls: str  # conset(str, min_length=1)  # type: ignore
+    file_id: str
