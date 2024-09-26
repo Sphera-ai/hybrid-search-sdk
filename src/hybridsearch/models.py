@@ -21,14 +21,26 @@ class WordCharacter(str, Enum):
         use_enum_values = True
 
 
-class Document(BaseModel):
-    field: str = "tetxt"
+class Preprocessing(BaseModel):
     chunk_mode: ChunkMod = ChunkMod.NAIVE
     chunk_size: int = 100
     overlap_size: int = 20
     mode: WordCharacter = WordCharacter.WORD
-    model_to_semantic_chunk: str = (
+    semantic_chunk_model: str = (
         "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     )
-    urls: str  # conset(str, min_length=1)  # type: ignore
+
+
+class DocumentInformations(BaseModel):
+    field: str = "text"
     file_id: str
+
+
+class Document(BaseModel):
+    preprocessing: Preprocessing
+    fields: DocumentInformations
+    url: str
+
+
+class DocumentBatch(BaseModel):
+    documents: conset(Document, min_length=1)  # type: ignore

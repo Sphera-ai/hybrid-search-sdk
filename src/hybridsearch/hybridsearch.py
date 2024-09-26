@@ -4,7 +4,7 @@ import json
 
 import requests as req
 
-from .exceptions import CollectionNotFound, DocumentCreationFailed, InvalidApiKey
+from .exceptions import CollectionNotFound, InvalidApiKey
 from .models import Document
 
 
@@ -43,7 +43,11 @@ class HybridSearch:
         """This function returns all the collections in the database
 
         Returns:
-            json: response with all the collections
+            json: response with a list of json containing information of the collections
+
+        Raises:
+            CollectionNotFound: If the collection is not found
+            InvalidApiKey: If the API key
         """
         response = req.get(
             f"http://{self.url}:{self.port}/collections",
@@ -51,18 +55,10 @@ class HybridSearch:
         )
         if response.status_code == 401:
             raise InvalidApiKey("Invalid API key")
-        if response.status_code == 404:
+        elif response.status_code == 404:
             raise CollectionNotFound("No collection found")
-        
-        
 
-        if response.status_code == 200:
-            return {"status": 200, "description": response.json()}
-        else:
-            return {
-                "status": response.status_code,
-                "description": json.loads(response.text)["detail"],
-            }
+        return response.json()
 
     def get_collection(self, collection_name):
         """This function returns the collection with the given name
@@ -72,60 +68,75 @@ class HybridSearch:
 
         Returns:
             json: response with the collection information
+
+        Raises:
+            CollectionNotFound: If the collection is not found
+            InvalidApiKey: If the API key
+
         """
         response = req.get(
             f"http://{self.url}:{self.port}/collections/{collection_name}",
             headers={"x-typesense-api-key": self.api_key},
         )
 
-        if response.status_code == 200:
-            return {"status": response.status_code, "description": response.json()}
-        else:
-            return {
-                "status": response.status_code,
-                "description": json.loads(response.text)["detail"],
-            }
+        if response.status_code == 401:
+            raise InvalidApiKey("Invalid API key")
+        elif response.status_code == 404:
+            raise CollectionNotFound("No collection found")
 
-    def create_custom_collection(
-        self, embedding_field: str, model_name: str, schema: dict
-    ):
+        return response.json()
+
+    def create_custom_collection(self, collection_name: str, schema: dict):
         """This function creates a collection in the database
 
         Args:
-            embedding_field (str, required): field to embed
-            model_name (str, required): model  name used to embed the field
+            collection_name (str, required): Name of the collection
             schema (dict, required): schema of the fields
 
         Returns:
             json: response of the created collection
+
+        Raises:
+
         """
 
         response = req.post(
             f"http://{self.url}:{self.port}/create-collection-custom",
             headers={"x-typesense-api-key": self.api_key},
             params={
-                "embedding_field": embedding_field,
-                "model_name": model_name,
+                "collection_name": collection_name,
             },
             json=schema,
         )
 
-        if response.status_code == 200:
-            return {"status": response.status_code, "description": response.json()}
-        else:
-            return {
-                "status": response.status_code,
-                "description": json.loads(response.text)["detail"],
-            }
+        # execptions
+
+        return response.json()
 
     def create_collection(self, collection_name):
         """This function creates a general collection in the database,
         with a field text with is autoembeded with the model name e5-small
 
+        The default collections is created with the following schema:
+
+        {
+            id: string
+            embedding: float,
+            text: string,
+            start_line: int,
+            end_line: int,
+            page: int,
+            file_id: string
+        }
+
         Args:
             collection_name (str, required): Name of the collection
+
         Returns:
             response: dict
+
+        Raises:
+
         """
         response = req.post(
             f"http://{self.url}:{self.port}/create-collection",
@@ -133,15 +144,13 @@ class HybridSearch:
             params={"name": collection_name},
         )
 
-        if response.status_code == 200:
-            return {"status": response.status_code, "description": response.json()}
-        else:
-            return {
-                "status": response.status_code,
-                "description": json.loads(response.text)["detail"],
-            }
+        return response.json()
 
-    def create_document(self, collection_name: str, schema: Document):
+    def create_document(
+        self,
+        collection_name: str,
+        document: Document,
+    ):
         """This function creates a document in the collection
 
         Args:
@@ -151,20 +160,17 @@ class HybridSearch:
         Returns:
             json: response
         """
+
         response = req.post(
             f"http://{self.url}:{self.port}/create-document/",
             headers={"x-typesense-api-key": self.api_key},
             params={"name": collection_name},
-            json=schema,
+            json=document,
         )
-        if response.status_code == 404:
-            raise CollectionNotFound(collection_name)
-        elif response.status_code == 400:
-            raise DocumentCreationFailed(json.loads(response.text)["detail"])
-        else:
-            return {"status": 200, "description": "Document created successfully"}
 
-    def delete_document(self, collection_name: str, field: str, pdf_id: str):
+        return response.json()
+
+    def delete_document(self, collection_name: str, filter_by: str, document_id: id):
         """This function deletes a document in the collection
 
         Args:
@@ -175,22 +181,18 @@ class HybridSearch:
         Returns:
             json: response
         """
-        response = req.delete(
+        req.delete(
             f"http://{self.url}:{self.port}/delete-document",
             headers={"x-typesense-api-key": self.api_key},
             params={
                 "name": collection_name,
-                "document_id": pdf_id,
-                "field": field,
+                "document_id": document_id,
+                "filter_by": filter_by,
             },
         )
 
-        if response.status_code == 200:
-            return {"status": 200, "description": "Document deleted successfully"}
-        return {
-            "status": int(response.status_code),
-            "description": json.loads(response.text)["detail"],
-        }
+        # TODO: exceptions
+        return True
 
     def delete_collection(self, collection_name):
         """This function deletes the collection with the given name
@@ -256,7 +258,7 @@ class HybridSearch:
         collection_name: str,
         query: str,
         num_results: int,
-        field: str,
+        ft_search_field: str,
         rerank: bool = False,
         rerank_model: str = None,
     ):
@@ -267,7 +269,7 @@ class HybridSearch:
             collection_name (str): Name of the collection
             query (str): Query to search
             num_results (int): Number of results
-            field (str): fields to search
+            ft_search_field (str): field to execute the full text search
             rerank (bool, optional): If True, rerank the results. Defaults to False.
             rerank_model (str, optional): Model to rerank the results. Defaults to None.
         Returns:
@@ -280,7 +282,7 @@ class HybridSearch:
                 "collection_name": collection_name,
                 "query": query,
                 "num_results": num_results,
-                "search_field": field,
+                "search_field": ft_search_field,
                 "rerank": rerank,
                 "rerank_model": rerank_model,
             },
@@ -298,7 +300,7 @@ class HybridSearch:
         collection_name: str,
         query: str,
         num_results: int,
-        field: str,
+        ft_search_field: str,
         rerank: bool = False,
         rerank_model: str = None,
         filters: list = None,
@@ -310,7 +312,7 @@ class HybridSearch:
             collection_name (str): Name of the collection
             query (str): Query to search
             num_results (int): Number of results
-            field (str): fields to search
+            ft_search_field (str): field to execute the full text search
             rerank (bool, optional): If True, rerank the results. Defaults to False.
             rerank_model (str, optional): Model to rerank the results. Defaults to None.
         Returns:
@@ -321,11 +323,12 @@ class HybridSearch:
             "collection_name": collection_name,
             "query": query,
             "num_results": num_results,
-            "search_field": field,
+            "search_field": ft_search_field,
             "rerank": rerank,
             "rerank_model": rerank_model,
             "filters": filters,
         }
+
         response = req.post(
             f"http://{self.url}:{self.port}/hybridsearch_filter/",
             headers={"x-typesense-api-key": self.api_key},
@@ -377,173 +380,3 @@ class HybridSearch:
                 "status": response.status_code,
                 "description": json.loads(response.text)["detail"],
             }
-
-    # def create_documents_for_list(
-    #     self,
-    #     collection_name: str,
-    #     url_list: list,
-    #     field: str,
-    #     chunk_mode: str = "naive",  # naive or semantic
-    #     chunk_size: int = 1000,
-    #     overlap_size=200,
-    #     mode: str = "words",
-    #     model_to_semantic_chunk: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-    # ):
-    #     """This function creates documents from a list of urls
-
-    #     Args:
-    #         collection_name (str): collection name
-    #         list (list): list of urls
-    #         field (str): field to insert the text
-    #         chunk_mode (str, optional): chunk mode. Defaults to "naive".
-    #         chunk_size (int, optional): chunk size. Defaults to 1000.
-    #         overlap_size (int, optional): overlap size. Defaults to 200.
-    #         mode (str, optional): mode. Defaults to "words".
-    #         model_to_semantic_chunk (str, optional): model to semantic chunk. Defaults to "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2".
-    #     """
-
-    #     if chunk_mode not in ["naive", "semantic"]:
-    #         raise ValueError("chunk_mode should be 'naive' or 'semantic'")
-
-    #     # create a .tmp folder where the files are donwloaded
-    #     if not os.path.exists(".tmp"):
-    #         os.makedirs(".tmp")
-
-    #     for url in url_list:
-    #         # download the files
-    #         response = req.get(url)
-    #         pdf_name = url.split("/")[-1]
-    #         with open(f".tmp/{pdf_name}", "wb") as f:
-    #             f.write(response.content)
-
-    #     pdfs = os.listdir(".tmp")
-    #     list_response = []
-    #     for pdf in pdfs:
-    #         response = self.create_document_from_file(
-    #             collection_name,
-    #             f".tmp/{pdf}",
-    #             field,
-    #             chunk_mode,
-    #             chunk_size,
-    #             overlap_size,
-    #             mode,
-    #             model_to_semantic_chunk,
-    #         )
-    #         list_response.append(response)
-
-    #     # create a dict with the response for each pdf
-    #     response = {}
-    #     for i, pdf in enumerate(pdfs):
-    #         response[pdf] = list_response[i]
-    #     # delete the .tmp folder and the contents
-    #     for pdf in pdfs:
-    #         os.remove(f".tmp/{pdf}")
-    #     os.rmdir(".tmp")
-
-    #     return response
-
-    # def create_document_from_document(self, collection_name: str, pdf_file):
-    #     """This function creates a document in the collection
-
-    #     Args:
-    #         collection_name (str): Name of the collection
-
-    #     Returns:
-    #         json: response
-    #     """
-    #     response = req.post(
-    #         f"http://{self.url}:{self.port}/create-document_1",
-    #         headers={"x-typesense-api-key": self.api_key},
-    #         params={"name": collection_name},
-    #         files={"file": pdf_file},
-    #     )
-
-    #     if response.status_code == 200:
-    #         return {"status": 200, "description": "Document sent successfully"}
-    #     return {
-    #         "status": int(response.status_code),
-    #         "description": json.loads(response.text)["detail"],
-    #     }
-
-    # def create_document_from_list(
-    #     self, collection_name: str, urls: list, preprocessing: dict
-    # ):
-    #     schema = {}
-    #     # insert urls in the schema
-    #     urls_ = []
-    #     for i, url in enumerate(urls):
-    #         urls_.append(url)
-
-    #     schema["urls"] = urls_
-    #     schema.update({key: value for key, value in preprocessing.items()})
-
-    #     response = req.post(
-    #         f"http://{self.url}:{self.port}/create-document_1/",
-    #         headers={"x-typesense-api-key": self.api_key},
-    #         params={"name": collection_name},
-    #         json=schema,  # Ensure that you're using `json=` to send the body as JSON
-    #     )
-
-    #     if response.status_code == 200:
-    #         return {"status": 200, "description": "Document sent successfully"}
-    #     return {
-    #         "status": int(response.status_code),
-    #         "description": json.loads(response.text)["detail"],
-    #     }
-
-    # def create_document_from_file(
-    #     self,
-    #     collection_name: str,
-    #     file_path: str,
-    #     field: str,
-    #     chunk_mode: str = "naive",  # naive or semantic
-    #     chunk_size: int = 1000,
-    #     overlap_size=200,
-    #     mode: str = "words",
-    #     model_to_semantic_chunk: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-    # ):
-    #     """This function creates documents from a pdf file
-
-    #     Args:
-    #         collection_name (str): collection name
-    #         file_path (str): path to the file
-    #         field (str): field to insert the text
-    #         chunk_mode (str, optional): chunk mode. Defaults to "naive".
-    #         chunk_size (int, optional): chunk size. Defaults to 1000.
-    #         overlap_size (int, optional): overlap size. Defaults to 200.
-    #         mode (str, optional): mode. Defaults to "words".
-    #         model_to_semantic_chunk (str, optional): model to semantic chunk. Defaults to "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2".
-    #     """
-
-    #     if chunk_mode not in ["naive", "semantic"]:
-    #         raise ValueError("chunk_mode should be 'naive' or 'semantic'")
-
-    #     if chunk_mode == "semantic":
-    #         if model_to_semantic_chunk == "":
-    #             raise ValueError("model_to_semantic_chunk should be provided")
-
-    #         chunker = SemanticChunking(file_path, model_to_semantic_chunk)
-    #         chunks, _ = chunker.create_chunks()
-
-    #     if chunk_mode == "naive":
-    #         if mode not in ["words", "characters"]:
-    #             raise ValueError("mode should be 'words' or 'characters'")
-
-    #         try:
-    #             chunker = NaiveChunking(file_path, chunk_size, overlap_size, mode)
-    #         except Exception as e:
-    #             logger.error(f"Error in naive chunking: {str(e)}")
-    #         chunks = chunker.create_chunks()
-
-    #     for chunk in chunks:
-    #         schema = {
-    #             field: chunk["text"],
-    #             "page": chunk["page"],
-    #             "start_line": chunk["start_line"],
-    #             "end_line": chunk["end_line"],
-    #         }
-
-    #         response = self.create_document(collection_name, schema)
-    #         if response["status"] != 200:
-    #             return response
-    #     return response
