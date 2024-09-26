@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Union
 
 from pydantic import BaseModel, conset
 
@@ -39,7 +40,7 @@ class DocumentInformations(BaseModel):
 class Document(BaseModel):
     preprocessing: Preprocessing
     fields: DocumentInformations
-    url: str
+    file: str | bytes
 
 
 class DocumentBatch(BaseModel):
