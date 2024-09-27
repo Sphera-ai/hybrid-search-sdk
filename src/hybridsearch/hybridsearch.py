@@ -23,8 +23,6 @@ class HybridSearch:
         self.port = port
         self.url = url
 
-        self.check_api_key()
-
     def check_api_key(self):
         """
         This function checks if the API key is valid
