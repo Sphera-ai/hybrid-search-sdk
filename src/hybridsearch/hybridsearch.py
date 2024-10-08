@@ -107,7 +107,7 @@ class HybridSearch:
             f"{self.url}:{self.port}/create-collection-custom",
             headers={"x-typesense-api-key": self.api_key},
             params={
-                "collection_name": collection_name,
+                "name_collection": collection_name,
             },
             json=schema,
         )
