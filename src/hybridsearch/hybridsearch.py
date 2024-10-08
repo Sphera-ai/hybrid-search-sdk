@@ -187,7 +187,7 @@ class HybridSearch:
             json: response
         """
         req.delete(
-            f"{self.url}:{self.port}/delete-document",
+            f"{self.url}:{self.port}/delete-documents",
             headers={"x-typesense-api-key": self.api_key},
             params={
                 "name": collection_name,
