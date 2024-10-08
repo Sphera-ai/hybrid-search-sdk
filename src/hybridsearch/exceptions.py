@@ -17,3 +17,9 @@ class DocumentCreationFailed(Exception):
     def __init__(self, message):
         self.message = message
         super().__init__(message)
+
+
+class GenericError(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(message)

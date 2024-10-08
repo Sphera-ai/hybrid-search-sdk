@@ -5,7 +5,7 @@ from asyncio.log import logger
 
 import requests as req
 
-from .exceptions import CollectionNotFound, InvalidApiKey
+from .exceptions import CollectionNotFound, GenericError, InvalidApiKey
 from .models import Document
 
 
@@ -173,7 +173,9 @@ class HybridSearch:
 
         return response.json()
 
-    def delete_document(self, collection_name: str, filter_by: str, document_id: id):
+    def delete_document(
+        self, collection_name: str, filter_by: str = None, document_id: id = None
+    ):
         """This function deletes a document in the collection
 
         Args:
@@ -290,13 +292,11 @@ class HybridSearch:
                 "rerank_model": rerank_model,
             },
         )
-        if response.status_code == 200:
-            return {"status": response.status_code, "description": response.json()}
+
+        if response.status_code != 200:
+            raise GenericError(json.loads(response.text)["detail"])
         else:
-            return {
-                "status": response.status_code,
-                "description": json.loads(response.text)["detail"],
-            }
+            return response.json()
 
     def hybrid_search_filter(
         self,
