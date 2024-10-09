@@ -190,7 +190,7 @@ class HybridSearch:
             f"{self.url}:{self.port}/delete-documents",
             headers={"x-typesense-api-key": self.api_key},
             params={
-                "name": collection_name,
+                "collection_name": collection_name,
                 "document_id": document_id,
                 "filter_by": filter_by,
             },
