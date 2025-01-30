@@ -61,7 +61,7 @@ Returns the collection with the given name.
 - **Returns:**
 ```
   {
-    "status": int, 
+    "status": int,
     "description": dict | str   # Collection or error string
   }
 ```
