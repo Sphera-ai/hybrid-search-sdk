@@ -3,10 +3,10 @@ from __future__ import annotations
 import json
 from asyncio.log import logger
 
-import requests as req
+import requests as req  # type: ignore
 
 from .exceptions import CollectionNotFound, GenericError, InvalidApiKey
-from .models import Document
+from .models import Document, Entry
 
 
 class HybridSearch:
@@ -25,9 +25,8 @@ class HybridSearch:
 
     def check_api_key(self):
         """
-        This function checks if the API key is valid
-        returns true if the API key is valid
-
+        This function checks if the API key is valid.
+        Returns true if the API key is valid.
         """
         status_code = req.get(
             f"{self.url}:{self.port}/api-key",
@@ -63,7 +62,7 @@ class HybridSearch:
 
         return response.json()
 
-    def get_collection(self, collection_name):
+    def get_collection(self, collection_name: str):
         """This function returns the collection with the given name
 
         Args:
@@ -74,8 +73,7 @@ class HybridSearch:
 
         Raises:
             CollectionNotFound: If the collection is not founda
-            InvalidApiKey: If the API key
-
+            InvalidApiKey: If the API key is invalid
         """
         response = req.get(
             f"{self.url}:{self.port}/collections/{collection_name}",
@@ -90,7 +88,29 @@ class HybridSearch:
         return response.json()
 
     def create_custom_collection(self, collection_name: str, schema: dict):
-        """This function creates a collection in the database
+        """This function creates a collection in the database with the provided schema.
+
+        Example schema:
+        ```json
+        {
+            "fields": [
+                {"name": ".*", "type": "auto"},
+                {"name": "text", "type": "string"},
+                {
+                    "name": "embedding",
+                    "type": "float[]",
+                    "embed": {
+                        "from": ["text"],
+                        "model_config": {"model_name": "ts/multilingual-e5-small"},
+                    },
+                },
+                {"name": "page", "type": "int32"},
+                {"name": "start_line", "type": "int32"},
+                {"name": "end_line", "type": "int32"},
+                {"name": "entry_id", "type": "string"}
+            ]
+        }
+        ```
 
         Args:
             collection_name (str, required): Name of the collection
@@ -98,9 +118,6 @@ class HybridSearch:
 
         Returns:
             json: response of the created collection
-
-        Raises:
-
         """
 
         response = req.post(
@@ -116,9 +133,9 @@ class HybridSearch:
 
         return response.json()
 
-    def create_collection(self, collection_name):
-        """This function creates a general collection in the database,
-        with a field text with is autoembeded with the model name e5-small
+    def create_collection(self, collection_name: str):
+        """This function creates a document collection in the database,
+        with a text field which is embedded with the model named ts/multilingual-e5-small.
 
         The default collections is created with the following schema:
 
@@ -154,7 +171,9 @@ class HybridSearch:
         collection_name: str,
         document: Document,
     ):
-        """This function creates a document in the collection
+        """This function creates a document in the specified collection.
+        The collection must be created before calling this function.
+        The collection must be a "document" collection.
 
         Args:
             collection_name (str): Name of the collection
@@ -173,15 +192,37 @@ class HybridSearch:
 
         return response.json()
 
-    def delete_document(
-        self, collection_name: str, filter_by: str = None, document_id: id = None
-    ):
-        """This function deletes a document in the collection
+    def create_entry(self, collection_name: str, entry: Entry):
+        """This function creates an entry in the specified collection.
 
         Args:
-            collection_name (str): Name of the collection
-            field (str): field name to search the pdf document
-            pdf_id (str): Id of the pdf document
+            name (str): The collection name
+            entry (Entry): The entry to be created. It contains the field values.
+
+        Returns:
+            json: response
+        """
+        response = req.post(
+            f"{self.url}:{self.port}/create-document/",
+            headers={"x-typesense-api-key": self.api_key},
+            params={"name": collection_name},
+            json=entry,
+        )
+
+        return response.json()
+
+    def delete_documents(
+        self,
+        collection_name: str,
+        document_id: str | None = None,
+        filter_by: str | None = None,
+    ):
+        """This function deletes a document in the specified collection.
+
+        Args:
+            collection_name (str): Name of the collection.
+            document_id (str): Id of the document.
+            filter_by (str): Filter that matches the documents to delete.
 
         Returns:
             json: response
@@ -199,8 +240,37 @@ class HybridSearch:
         # TODO: exceptions
         return True
 
-    def delete_collection(self, collection_name):
-        """This function deletes the collection with the given name
+    def delete_entries(
+        self,
+        collection_name: str,
+        entry_id: str | None = None,
+        filter_by: str | None = None,
+    ):
+        """This function deletes an entry in the specified collection.
+
+        Args:
+            collection_name (str): Name of the collection.
+            entry_id (str): Id of the entry.
+            filter_by (str): Filter that matches the entries to delete.
+
+        Returns:
+            json: response
+        """
+        req.delete(
+            f"{self.url}:{self.port}/delete-documents",
+            headers={"x-typesense-api-key": self.api_key},
+            params={
+                "collection_name": collection_name,
+                "entry_id": entry_id,
+                "filter_by": filter_by,
+            },
+        )
+
+        # TODO: exceptions
+        return True
+
+    def delete_collection(self, collection_name: str):
+        """This function deletes the collection with the given name.
 
         Args:
             collection_name (str): Name of the collection
@@ -227,14 +297,16 @@ class HybridSearch:
         query: str,
         num_results: int,
         rerank: bool = False,
-        rerank_model: str = None,
+        rerank_model: str | None = None,
     ):
-        """This function performs a semantic search on the collection
+        """This function performs a semantic search on the specified collection.
 
         Args:
             collection_name (str): Name of the collection
             query (str): Query to search
             num_results (int): Number of results
+            rerank (bool, optional): If True, rerank the results. Defaults to False.
+            rerank_model (str, optional): Model to rerank the results. Defaults to None. Choose between: bge-m3-Rerank, mxbai-rerank-large-V1.
 
         Returns:
             json: response
@@ -265,7 +337,7 @@ class HybridSearch:
         num_results: int,
         ft_search_field: str,
         rerank: bool = False,
-        rerank_model: str = None,
+        rerank_model: str | None = None,
     ):
         """This function performs a hybrid search on the collection, combining semantic search and full text search
         on a field or fields choose by the user
@@ -276,7 +348,7 @@ class HybridSearch:
             num_results (int): Number of results
             ft_search_field (str): field to execute the full text search
             rerank (bool, optional): If True, rerank the results. Defaults to False.
-            rerank_model (str, optional): Model to rerank the results. Defaults to None.
+            rerank_model (str, optional): Model to rerank the results. Defaults to None. Choose between: bge-m3-Rerank, mxbai-rerank-large-V1.
         Returns:
             response: json
         """
@@ -305,8 +377,8 @@ class HybridSearch:
         num_results: int,
         ft_search_field: str,
         rerank: bool = False,
-        rerank_model: str = None,
-        filters: list = None,
+        rerank_model: str | None = None,
+        filters: list | None = None,
     ):
         """This function performs a hybrid search on the collection, combining semantic search and full text search
         on a field or fields choose by the user
@@ -317,7 +389,8 @@ class HybridSearch:
             num_results (int): Number of results
             ft_search_field (str): field to execute the full text search
             rerank (bool, optional): If True, rerank the results. Defaults to False.
-            rerank_model (str, optional): Model to rerank the results. Defaults to None.
+            rerank_model (str, optional): Model to rerank the results. Defaults to None. Choose between: bge-m3-Rerank, mxbai-rerank-large-V1.
+            filters (list, optional): List of filters to apply. Defaults to None.
         Returns:
             response: json
         """
@@ -346,11 +419,11 @@ class HybridSearch:
                 "description": json.loads(response.text)["detail"],
             }
 
-    def get_model_name(self):
-        """This function returns the model name used to embed
+    def get_model_names(self):
+        """This function returns the model names that can be used to embed.
 
         Returns:
-            response: json with a list of the models used for embedding
+            response: json with a list of the models used for embedding.
         """
         response = req.get(
             f"{self.url}:{self.port}/embedding_models",
@@ -365,8 +438,8 @@ class HybridSearch:
                 "description": json.loads(response.text)["detail"],
             }
 
-    def get_rerank_model_name(self):
-        """This function returns the model name used to rerank
+    def get_rerank_model_names(self):
+        """This function returns the model names that can be used to rerank.
 
         Returns:
             response: json with a list of the models used for embedding

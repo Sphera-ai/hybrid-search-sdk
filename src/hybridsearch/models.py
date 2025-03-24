@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, conset
 
@@ -41,6 +40,10 @@ class Document(BaseModel):
     preprocessing: Preprocessing
     default_fields: DocumentInformations
     file: str
+    fields: dict
+
+
+class Entry(BaseModel):
     fields: dict
 
 
