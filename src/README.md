@@ -7,6 +7,7 @@ The `HybridSearch` class provides a convenient interface to interact with a micr
 ## Initialization
 
 ### `__init__(self, api_key: str, url: str = "localhost", port: int = 8000)`
+
 Initializes the `HybridSearch` class.
 
 - **Parameters:**
@@ -15,10 +16,12 @@ Initializes the `HybridSearch` class.
   - `port` (int, optional): Port of the microservice. Default is 8000.
 
 - **Example:**
+
 ```python
 # Initialize the search client
 search_client = HybridSearch(api_key="your_api_key")
 ```
+
 ## Methods
 
 ### `check_api_key(self)`
@@ -34,23 +37,29 @@ search_client.check_api_key()
 ```
 
 - **Example:**
+
 ### `get_all_collections(self)`
+
 Returns a list of dict containing the informations of the database.
 
 - **Returns:**
-```
+
+```python
   {
     "status": int,
     "description": list[dict] | str   # list of collection or error string
   }
 ```
+
 status code: [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#get-collection)
 
 - **Example:**
+
 ```python
 # Get all collections
 status_code, collections = search_client.get_all_collections()
 ```
+
 ### `get_collection(self, collection_name)`
 
 Returns the collection with the given name.
@@ -59,20 +68,25 @@ Returns the collection with the given name.
   - `collection_name` (str, required): Name of the collection.
 
 - **Returns:**
-```
+
+```python
   {
     "status": int,
     "description": dict | str   # Collection or error string
   }
 ```
+
 status code : [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#get-collection)
 
 - **Example:**
+
 ```python
 # Get a specific collection
 status_code,collection_info = search_client.get_collection("example_collection")
 ```
+
 ### `create_custom_collection(self, embedding_field, model_name, schema)`
+
 Creates a custom collection in the database.
 
 - **Parameters:**
@@ -83,14 +97,18 @@ Creates a custom collection in the database.
 models names can be retrieved using the function `get_model_name()`
 
 - **Returns:**
-```
+
+```python
   {
     "status": int,
     "description": dict | str   # list of collection or error string
   }
 ```
-status code : [link] (https://github.com/Sphera-ai/hybrid-search/tree/main/search#create-custom-collection)
+
+status code : [link] (<https://github.com/Sphera-ai/hybrid-search/tree/main/search#create-custom-collection>)
+
 - **Example:**
+
 ```python
 # Create a custom collection
 schema = {
@@ -103,7 +121,9 @@ schema = {
 
 created_collection = search_client.create_custom_collection(schema)
 ```
+
 ### `create_collection(self, collection_name)`
+
 Creates a general collection in the database.
 
 - **Parameters:**
@@ -112,14 +132,18 @@ Creates a general collection in the database.
 By default the field named `text` will be used to be embedded.
 
 - **Returns:**
-```
+
+```python
   {
     "status": int,
     "description": dict | str   # list of collection or error string
   }
 ```
+
 status code : [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#create-collection)
+
 - **Example:**
+
 ```python
 status_code, created_collection = search_client.create_collection(test)
 
@@ -149,18 +173,23 @@ Deletes the collection with the given name.
   - `collection_name` (str, required): Name of the collection.
 
 - **Returns:**
-```
+
+```python
   {
     "status": int,
     "description": str
   }
 ```
+
 status code : [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#delete-collection)
+
 - **Example:**
+
 ```python
 # Delete a collection
 deleted_collection = search_client.delete_collection("example_collection")
 ```
+
 ### `create_document(self, collection_name: str, schema: dict)`
 
 Creates a document in the specified collection.
@@ -170,9 +199,15 @@ Creates a document in the specified collection.
   - `schema` (dict, required): schema of the document to be inserted.
 
 - **Returns:**
-```{"status": int,"description": str}```
-status code : [link] (https://github.com/Sphera-ai/hybrid-search/tree/main/search#create-document)
+
+```python
+{"status": int,"description": str}
+```
+
+status code : [link] (<https://github.com/Sphera-ai/hybrid-search/tree/main/search#create-document>)
+
 - **Example:**
+
 ```python
 # Create a document
 schema = {
@@ -197,17 +232,19 @@ Creates a document in the specified collection.
   - `mode`(str):  mode should be 'words' or 'characters', defualt: "words".
   - `model_to_semantic_chunk`(str):  model used to execute semanti chunking. Default "paraphrase-multilingual-MiniLM-L12-v2"
 
-
 - **Returns:**
-``` {"status": int, description": str } ```
+
+```python
+{"status": int, "description": str }
+```
 
 - **Example:**
+
 ```python
 status_code,created_document = search_client.create_document("example_collection","./test.pdf","text")
-
 ```
-status code : [link] (https://github.com/Sphera-ai/hybrid-search/tree/main/search#create-document)
 
+status code : [link] (<https://github.com/Sphera-ai/hybrid-search/tree/main/search#create-document>)
 
 ### `semantic_search(self, collection_name: str, query: str, num_results: int, rerank:bool, rerank_model:str)`
 
@@ -223,14 +260,18 @@ Performs a semantic search on the specified collection.
 Available rerank models can be retrieved using the function `get_rerank_model_name`
 
 - **Returns:**
-```
+
+```python
   {
     "status": int,
     "description": list[dict] | str   # list of results or error string
   }
 ```
+
 status code : [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#perform-semantic-search)
+
 - **Example:**
+
 ```python
 # Perform a semantic search
 status_code, semantic_search_results = search_client.semantic_search("example_collection", "example query", 5)
@@ -252,14 +293,18 @@ Performs a hybrid search on the specified collection, combining semantic search 
 - If you want to select multiple field for the hybrid-search, seperates the fields using a comma. `field1, field2, ..`
 
 - **Returns:**
-```
+
+```python
   {
     "status": int,
     "description": list[dict] | str   # list of results or error string
   }
 ```
+
 status code : [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#perform-hybrid-search)
+
 - **Example:**
+
 ```python
 # Perform a hybrid search
 status_code, hybrid_search_results = search_client.hybrid_search("example_collection", "example query", 5, "title")
@@ -267,43 +312,54 @@ status_code, hybrid_search_results = search_client.hybrid_search("example_collec
 ```
 
 ### `get_model_name(self)`
+
 Returns the models name used to do embedding.
 
 - **Returns:**
-```
+
+```python
   {
     "status": int,
     "description": list[dict] | str   # list of results or error string
   }
 ```
+
 - **Example:**
+
 ```python
 # Get schema attributes
 model_names = search_client.get_model_name()
 ```
+
 status code : [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#get-embedding-models)
+
 ### `get_rerank_model_name(self)`
+
 Returns the models name used to do rerank.
 
 - **Returns:**
-```
+
+```python
   {
     "status": int,
     "description": list[dict] | str   # list of results or error string
   }
 ```
+
 status code : [link](https://github.com/Sphera-ai/hybrid-search/tree/main/search#get-reranking-models)
+
 - **Example:**
+
 ```python
 # Get schema attributes
 model_names = search_client.get_model_name()
 ```
 
+## Preprocessing Documentation
 
-# Preprocessing Documentation
+### Method
 
-## Method
-### `process_pdf_to_chunks(self, pdf_path: str, chunk_size: int, overlap_size:int)`
+#### `process_pdf_to_chunks(self, pdf_path: str, chunk_size: int, overlap_size:int)`
 
 This function creates chunks of text starting from a pdf given in input
 
@@ -313,7 +369,8 @@ This function creates chunks of text starting from a pdf given in input
   - `overlap_size`: overlap size, to give more
 - **Returns:**
   - `list[dict]`:
-  ```
+
+  ```python
   [{
     "page": int,
     "start_line": int,
@@ -323,6 +380,7 @@ This function creates chunks of text starting from a pdf given in input
   ```
 
 - **Example:**
+
 ```python
 # Get schema attributes
 model_names = search_client.process_pdf_to_chunks("example_collection", "./test.pdf", "text", 1000, 200)
