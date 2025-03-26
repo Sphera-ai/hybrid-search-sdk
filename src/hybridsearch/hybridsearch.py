@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from asyncio.log import logger
 
 import requests as req  # type: ignore
@@ -113,8 +112,8 @@ class HybridSearch:
                     },
                 },
                 {"name": "page", "type": "int32"},
-                {"name": "start_line", "type": "int32"},
-                {"name": "end_line", "type": "int32"},
+                {"name": "start_sentence", "type": "int32"},
+                {"name": "end_sentence", "type": "int32"},
                 {"name": "entry_id", "type": "string"}
             ]
         }
@@ -157,8 +156,8 @@ class HybridSearch:
             id: string
             embedding: float,
             text: string,
-            start_line: int,
-            end_line: int,
+            start_sentence: int,
+            end_sentence: int,
             page: int,
             file_id: string
         }
@@ -332,7 +331,7 @@ class HybridSearch:
         """This function performs a semantic search on the specified collection.
 
         Args:
-            collection_name (str): Name of the collection
+            collection_name (str): collection name. Can be a comma-separated list of collections
             query (str): Query to search
             num_results (int): Number of results
             rerank (bool, optional): If True, rerank the results. Defaults to False.
@@ -372,7 +371,7 @@ class HybridSearch:
         on a field or fields choose by the user
 
         Args:
-            collection_name (str): Name of the collection
+            collection_name (str): collection name. Can be a comma-separated list of collections
             query (str): Query to search
             num_results (int): Number of results
             ft_search_field (str): field to execute the full text search
@@ -414,7 +413,7 @@ class HybridSearch:
         on a field or fields choose by the user
 
         Args:
-            collection_name (str): Name of the collection
+            collection_name (str): collection name. Can be a comma-separated list of collections
             query (str): Query to search
             num_results (int): Number of results
             ft_search_field (str): field to execute the full text search
