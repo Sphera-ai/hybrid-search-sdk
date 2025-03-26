@@ -7,15 +7,15 @@ The Hybrid Search SDK is a Python library that provides an interface to interact
 To install the Hybrid Search SDK, you can use pip:
 
 ```shell
-pip install git+https://github.com/Aidia-srl/hybrid-search-sdk.git@dev
+pip install git+https://github.com/Aidia-srl/hybrid-search-sdk.git@main
 ```
 
 ## Usage
 
-To use the Hybrid Search SDK, you need to import the `HybridSearch` class from the `hybridsearch.hybridsearch` module:
+To use the Hybrid Search SDK, you need to import the `HybridSearch` class from the `hybridsearch` module:
 
 ```python
-from hybridsearch.hybridsearch import HybridSearch
+from hybridsearch import HybridSearch
 ```
 For more detailed documentation see `src/readme.md`
 
