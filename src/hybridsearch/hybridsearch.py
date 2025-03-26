@@ -6,7 +6,7 @@ from asyncio.log import logger
 import requests as req  # type: ignore
 
 from .exceptions import CollectionNotFound, GenericError, InvalidApiKey
-from .models import Document, Entry
+from .models import Document, EmbeddingModel, Entry, ReRankModel
 
 
 class HybridSearch:
@@ -35,8 +35,10 @@ class HybridSearch:
 
         if status_code == 500:
             logger.error("Internal server error")
+            return False
         if status_code != 200:
             logger.error("Invalid API key")
+            return False
 
         logger.info("API key is valid")
         return True
@@ -59,6 +61,9 @@ class HybridSearch:
             raise InvalidApiKey("Invalid API key")
         elif response.status_code == 404:
             raise CollectionNotFound("No collection found")
+        elif response.status_code != 200:
+            logger.error("Error calling the API")
+            raise GenericError("Error calling the API")
 
         return response.json()
 
@@ -84,6 +89,9 @@ class HybridSearch:
             raise InvalidApiKey("Invalid API key")
         elif response.status_code == 404:
             raise CollectionNotFound("No collection found")
+        elif response.status_code != 200:
+            logger.error("Error calling the API")
+            raise GenericError("Error calling the API")
 
         return response.json()
 
@@ -129,13 +137,19 @@ class HybridSearch:
             json=schema,
         )
 
-        # execptions
+        if response.status_code != 200:
+            logger.error("Error calling the API")
+            raise GenericError("Error calling the API")
 
         return response.json()
 
-    def create_collection(self, collection_name: str):
+    def create_collection(
+        self,
+        collection_name: str,
+        model_name: EmbeddingModel = EmbeddingModel.MULTILINGUAL_E5_SMALL,
+    ):
         """This function creates a document collection in the database,
-        with a text field which is embedded with the model named ts/multilingual-e5-small.
+        with a text field which is embedded with the model specified or the default ts/multilingual-e5-small.
 
         The default collections is created with the following schema:
 
@@ -161,8 +175,12 @@ class HybridSearch:
         response = req.post(
             f"{self.url}:{self.port}/create-collection",
             headers={"x-typesense-api-key": self.api_key},
-            params={"name": collection_name},
+            params={"name": collection_name, "model_name": model_name.value},
         )
+
+        if response.status_code != 200:
+            logger.error("Error calling the API")
+            raise GenericError("Error calling the API")
 
         return response.json()
 
@@ -190,6 +208,10 @@ class HybridSearch:
             json=document,
         )
 
+        if response.status_code != 200:
+            logger.error("Error calling the API")
+            raise GenericError("Error calling the API")
+
         return response.json()
 
     def create_entry(self, collection_name: str, entry: Entry):
@@ -209,6 +231,10 @@ class HybridSearch:
             json=entry,
         )
 
+        if response.status_code != 200:
+            logger.error("Error calling the API")
+            raise GenericError("Error calling the API")
+
         return response.json()
 
     def delete_documents(
@@ -227,7 +253,7 @@ class HybridSearch:
         Returns:
             json: response
         """
-        req.delete(
+        response = req.delete(
             f"{self.url}:{self.port}/delete-documents",
             headers={"x-typesense-api-key": self.api_key},
             params={
@@ -237,7 +263,10 @@ class HybridSearch:
             },
         )
 
-        # TODO: exceptions
+        if response.status_code != 200:
+            logger.error("Error calling the API")
+            raise GenericError("Error calling the API")
+
         return True
 
     def delete_entries(
@@ -256,7 +285,7 @@ class HybridSearch:
         Returns:
             json: response
         """
-        req.delete(
+        response = req.delete(
             f"{self.url}:{self.port}/delete-documents",
             headers={"x-typesense-api-key": self.api_key},
             params={
@@ -266,7 +295,10 @@ class HybridSearch:
             },
         )
 
-        # TODO: exceptions
+        if response.status_code != 200:
+            logger.error("Error calling the API")
+            raise GenericError("Error calling the API")
+
         return True
 
     def delete_collection(self, collection_name: str):
@@ -283,13 +315,11 @@ class HybridSearch:
             headers={"x-typesense-api-key": self.api_key},
         )
 
-        if response.status_code == 200:
-            return {"status": response.status_code, "description": "Collection deleted"}
-        else:
-            return {
-                "status": response.status_code,
-                "description": json.loads(response.text)["detail"],
-            }
+        if response.status_code != 200:
+            logger.error("Error calling the API")
+            raise GenericError("Error calling the API")
+
+        return True
 
     def semantic_search(
         self,
@@ -297,7 +327,7 @@ class HybridSearch:
         query: str,
         num_results: int,
         rerank: bool = False,
-        rerank_model: str | None = None,
+        rerank_model: ReRankModel = ReRankModel.BGE_RERANKER_LARGE,
     ):
         """This function performs a semantic search on the specified collection.
 
@@ -306,7 +336,7 @@ class HybridSearch:
             query (str): Query to search
             num_results (int): Number of results
             rerank (bool, optional): If True, rerank the results. Defaults to False.
-            rerank_model (str, optional): Model to rerank the results. Defaults to None. Choose between: bge-m3-Rerank, mxbai-rerank-large-V1.
+            rerank_model (ReRankModel): Model to rerank the results. Defaults to ReRankModel.BGE_RERANKER_LARGE.
 
         Returns:
             json: response
@@ -319,16 +349,15 @@ class HybridSearch:
                 "query": query,
                 "num_results": num_results,
                 "rerank": rerank,
-                "rerank_model": rerank_model,
+                "rerank_model": rerank_model.value,
             },
         )
-        if response.status_code == 200:
-            return {"status": response.status_code, "description": response.json()}
-        else:
-            return {
-                "status": response.status_code,
-                "description": json.loads(response.text)["detail"],
-            }
+
+        if response.status_code != 200:
+            logger.error("Error calling the API")
+            raise GenericError("Error calling the API")
+
+        return response.json()
 
     def hybrid_search(
         self,
@@ -337,7 +366,7 @@ class HybridSearch:
         num_results: int,
         ft_search_field: str,
         rerank: bool = False,
-        rerank_model: str | None = None,
+        rerank_model: ReRankModel = ReRankModel.BGE_RERANKER_LARGE,
     ):
         """This function performs a hybrid search on the collection, combining semantic search and full text search
         on a field or fields choose by the user
@@ -348,7 +377,7 @@ class HybridSearch:
             num_results (int): Number of results
             ft_search_field (str): field to execute the full text search
             rerank (bool, optional): If True, rerank the results. Defaults to False.
-            rerank_model (str, optional): Model to rerank the results. Defaults to None. Choose between: bge-m3-Rerank, mxbai-rerank-large-V1.
+            rerank_model (ReRankModel): Model to rerank the results. Defaults to ReRankModel.BGE_RERANKER_LARGE.
         Returns:
             response: json
         """
@@ -361,14 +390,15 @@ class HybridSearch:
                 "num_results": num_results,
                 "search_field": ft_search_field,
                 "rerank": rerank,
-                "rerank_model": rerank_model,
+                "rerank_model": rerank_model.value,
             },
         )
 
         if response.status_code != 200:
-            raise GenericError(json.loads(response.text)["detail"])
-        else:
-            return response.json()
+            logger.error("Error calling the API")
+            raise GenericError("Error calling the API")
+
+        return response.json()
 
     def hybrid_search_filter(
         self,
@@ -377,7 +407,7 @@ class HybridSearch:
         num_results: int,
         ft_search_field: str,
         rerank: bool = False,
-        rerank_model: str | None = None,
+        rerank_model: ReRankModel = ReRankModel.BGE_RERANKER_LARGE,
         filters: list | None = None,
     ):
         """This function performs a hybrid search on the collection, combining semantic search and full text search
@@ -389,7 +419,7 @@ class HybridSearch:
             num_results (int): Number of results
             ft_search_field (str): field to execute the full text search
             rerank (bool, optional): If True, rerank the results. Defaults to False.
-            rerank_model (str, optional): Model to rerank the results. Defaults to None. Choose between: bge-m3-Rerank, mxbai-rerank-large-V1.
+            rerank_model (ReRankModel): Model to rerank the results. Defaults to ReRankModel.BGE_RERANKER_LARGE.
             filters (list, optional): List of filters to apply. Defaults to None.
         Returns:
             response: json
@@ -401,7 +431,7 @@ class HybridSearch:
             "num_results": num_results,
             "search_field": ft_search_field,
             "rerank": rerank,
-            "rerank_model": rerank_model,
+            "rerank_model": rerank_model.value,
             "filters": filters,
         }
 
@@ -411,13 +441,11 @@ class HybridSearch:
             json=payload,
         )
 
-        if response.status_code == 200:
-            return {"status": response.status_code, "description": response.json()}
-        else:
-            return {
-                "status": response.status_code,
-                "description": json.loads(response.text)["detail"],
-            }
+        if response.status_code != 200:
+            logger.error("Error calling the API")
+            raise GenericError("Error calling the API")
+
+        return response.json()
 
     def get_model_names(self):
         """This function returns the model names that can be used to embed.
@@ -430,13 +458,11 @@ class HybridSearch:
             headers={"x-typesense-api-key": self.api_key},
         )
 
-        if response.status_code == 200:
-            return {"status": response.status_code, "description": response.json()}
-        else:
-            return {
-                "status": response.status_code,
-                "description": json.loads(response.text)["detail"],
-            }
+        if response.status_code != 200:
+            logger.error("Error calling the API")
+            raise GenericError("Error calling the API")
+
+        return response.json()
 
     def get_rerank_model_names(self):
         """This function returns the model names that can be used to rerank.
@@ -449,10 +475,25 @@ class HybridSearch:
             headers={"x-typesense-api-key": self.api_key},
         )
 
-        if response.status_code == 200:
-            return {"status": response.status_code, "description": response.json()}
-        else:
-            return {
-                "status": response.status_code,
-                "description": json.loads(response.text)["detail"],
-            }
+        if response.status_code != 200:
+            logger.error("Error calling the API")
+            raise GenericError("Error calling the API")
+
+        return response.json()
+
+    def get_supported_documents(self):
+        """This function returns the supported documents that can be added to a document collection.
+
+        Returns:
+            response: json with a list of the supported document formats
+        """
+        response = req.get(
+            f"{self.url}:{self.port}/supported_documents",
+            headers={"x-typesense-api-key": self.api_key},
+        )
+
+        if response.status_code != 200:
+            logger.error("Error calling the API")
+            raise GenericError("Error calling the API")
+
+        return response.json()

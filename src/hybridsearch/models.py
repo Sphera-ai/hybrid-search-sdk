@@ -13,19 +13,35 @@ class ChunkMod(str, Enum):
         use_enum_values = True
 
 
-class WordCharacter(str, Enum):
-    WORD = "words"
-    CHARACTER = "characters"
+class EmbeddingModel(Enum):
+    """
+    Insert the path of the model in the enum
+    """
 
-    class Config:
-        use_enum_values = True
+    ALL_MINILM_L12_V2 = "ts/all-MiniLM-L12-v2"
+    E5_SMALL = "ts/e5-small"
+    E5_SMALL_V2 = "ts/e5-small-v2"
+    E5_LARGE = "ts/e5-large"
+    E5_LARGE_V2 = "ts/e5-large-v2"
+    DISTILUSE_BASE_MULTILINGUAL_CASED_V2 = "ts/distiluse-base-multilingual-cased-v2"
+    DISTILBERT_BASE_UNCASED = "ts/distilbert-base-uncased"
+    GTE_LARGE = "ts/gte-large"
+    GTE_SMALL = "ts/gte-small"
+    JINA_EMBEDDINGS_V2_BASE_EN = "ts/jina-embeddings-v2-base-en"
+    MULTILINGUAL_E5_LARGE = "ts/multilingual-e5-large"
+    MULTILINGUAL_E5_SMALL = "ts/multilingual-e5-small"
+
+
+class ReRankModel(Enum):
+    # JINA_RERANK_V2 = "jina-rerank-v2"
+    BGE_RERANKER_LARGE = "bge-m3-Rerank"
+    MXBAI_RERANKER_LARGE = "mxbai-rerank-large-V1"
 
 
 class Preprocessing(BaseModel):
     chunk_mode: ChunkMod = ChunkMod.NAIVE
     chunk_size: int = 100
     overlap_size: int = 20
-    mode: WordCharacter = WordCharacter.WORD
     semantic_chunk_model: str = (
         "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     )
