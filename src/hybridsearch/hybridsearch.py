@@ -201,7 +201,7 @@ class HybridSearch:
         """
 
         response = req.post(
-            f"{self.url}:{self.port}/create-document/",
+            f"{self.url}:{self.port}/create-document",
             headers={"x-typesense-api-key": self.api_key},
             params={"name": collection_name},
             json=document.model_dump(),
@@ -224,7 +224,7 @@ class HybridSearch:
             json: response
         """
         response = req.post(
-            f"{self.url}:{self.port}/create-entry/",
+            f"{self.url}:{self.port}/create-entry",
             headers={"x-typesense-api-key": self.api_key},
             params={"name": collection_name},
             json=entry.model_dump(),
@@ -381,7 +381,7 @@ class HybridSearch:
             response: json
         """
         response = req.post(
-            f"{self.url}:{self.port}/collections-hybridsearch/",
+            f"{self.url}:{self.port}/collections-hybridsearch",
             headers={"x-typesense-api-key": self.api_key},
             params={
                 "collection_name": collection_name,
@@ -435,7 +435,7 @@ class HybridSearch:
         }
 
         response = req.post(
-            f"{self.url}:{self.port}/hybridsearch_filter/",
+            f"{self.url}:{self.port}/hybridsearch_filter",
             headers={"x-typesense-api-key": self.api_key},
             json=payload,
         )
