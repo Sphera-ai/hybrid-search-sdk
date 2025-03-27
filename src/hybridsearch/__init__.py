@@ -3,6 +3,7 @@ from __future__ import annotations
 from hybridsearch.hybridsearch import HybridSearch
 from hybridsearch.models import (
     Document,
+    DocumentInformations,
     EmbeddingModel,
     Entry,
     Preprocessing,
@@ -12,6 +13,7 @@ from hybridsearch.models import (
 __all__ = [
     "HybridSearch",
     "Document",
+    "DocumentInformations",
     "EmbeddingModel",
     "Entry",
     "Preprocessing",

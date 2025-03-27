@@ -204,7 +204,7 @@ class HybridSearch:
             f"{self.url}:{self.port}/create-document/",
             headers={"x-typesense-api-key": self.api_key},
             params={"name": collection_name},
-            json=document,
+            json=document.model_dump(),
         )
 
         if response.status_code != 200:
@@ -224,10 +224,10 @@ class HybridSearch:
             json: response
         """
         response = req.post(
-            f"{self.url}:{self.port}/create-document/",
+            f"{self.url}:{self.port}/create-entry/",
             headers={"x-typesense-api-key": self.api_key},
             params={"name": collection_name},
-            json=entry,
+            json=entry.model_dump(),
         )
 
         if response.status_code != 200:
@@ -285,7 +285,7 @@ class HybridSearch:
             json: response
         """
         response = req.delete(
-            f"{self.url}:{self.port}/delete-documents",
+            f"{self.url}:{self.port}/delete-entries",
             headers={"x-typesense-api-key": self.api_key},
             params={
                 "collection_name": collection_name,
