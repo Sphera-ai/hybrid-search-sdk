@@ -4,7 +4,13 @@ from asyncio.log import logger
 
 import requests as req  # type: ignore
 
-from .exceptions import CollectionNotFound, GenericError, InvalidApiKey
+from .exceptions import (
+    CollectionAlreadyExists,
+    CollectionNotFound,
+    InvalidApiKey,
+    InvalidRequest,
+    ServerError,
+)
 from .models import Document, EmbeddingModel, Entry, ReRankModel
 
 
@@ -41,58 +47,6 @@ class HybridSearch:
 
         logger.info("API key is valid")
         return True
-
-    def get_all_collections(self):
-        """This function returns all the collections in the database
-
-        Returns:
-            json: response with a list of json containing information of the collections
-
-        Raises:
-            CollectionNotFound: If the collection is not found
-            InvalidApiKey: If the API key
-        """
-        response = req.get(
-            f"{self.url}:{self.port}/collections",
-            headers={"x-typesense-api-key": self.api_key},
-        )
-        if response.status_code == 401:
-            raise InvalidApiKey("Invalid API key")
-        elif response.status_code == 404:
-            raise CollectionNotFound("No collection found")
-        elif response.status_code != 200:
-            logger.error("Error calling the API")
-            raise GenericError("Error calling the API")
-
-        return response.json()
-
-    def get_collection(self, collection_name: str):
-        """This function returns the collection with the given name
-
-        Args:
-            collection_name (str): Name of the collection
-
-        Returns:
-            json: response with the collection information
-
-        Raises:
-            CollectionNotFound: If the collection is not founda
-            InvalidApiKey: If the API key is invalid
-        """
-        response = req.get(
-            f"{self.url}:{self.port}/collections/{collection_name}",
-            headers={"x-typesense-api-key": self.api_key},
-        )
-
-        if response.status_code == 401:
-            raise InvalidApiKey("Invalid API key")
-        elif response.status_code == 404:
-            raise CollectionNotFound("No collection found")
-        elif response.status_code != 200:
-            logger.error("Error calling the API")
-            raise GenericError("Error calling the API")
-
-        return response.json()
 
     def create_custom_collection(self, collection_name: str, schema: dict):
         """This function creates a collection in the database with the provided schema.
@@ -131,14 +85,28 @@ class HybridSearch:
             f"{self.url}:{self.port}/create-collection-custom",
             headers={"x-typesense-api-key": self.api_key},
             params={
-                "name_collection": collection_name,
+                "collection_name": collection_name,
             },
             json=schema,
         )
 
+        if response.status_code == 401:
+            logger.error("Invalid API key")
+            raise InvalidApiKey("Invalid API key")
+
+        if response.status_code == 409:
+            logger.error("Collection already exists")
+            raise CollectionAlreadyExists(collection_name=collection_name)
+
+        if response.status_code == 500:
+            logger.error("Internal server error")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
+
         if response.status_code != 200:
             logger.error("Error calling the API")
-            raise GenericError("Error calling the API")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
 
         return response.json()
 
@@ -174,12 +142,80 @@ class HybridSearch:
         response = req.post(
             f"{self.url}:{self.port}/create-collection",
             headers={"x-typesense-api-key": self.api_key},
-            params={"name": collection_name, "model_name": model_name.value},
+            params={"collection_name": collection_name, "model_name": model_name.value},
         )
+
+        if response.status_code == 401:
+            logger.error("Invalid API key")
+            raise InvalidApiKey("Invalid API key")
+
+        if response.status_code == 409:
+            logger.error("Collection already exists")
+            raise CollectionAlreadyExists(collection_name=collection_name)
+
+        if response.status_code == 500:
+            logger.error("Internal server error")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
 
         if response.status_code != 200:
             logger.error("Error calling the API")
-            raise GenericError("Error calling the API")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
+
+        return response.json()
+
+    def get_collection(self, collection_name: str):
+        """This function returns the collection with the given name
+
+        Args:
+            collection_name (str): Name of the collection
+
+        Returns:
+            json: response with the collection information
+
+        Raises:
+            CollectionNotFound: If the collection is not founda
+            InvalidApiKey: If the API key is invalid
+        """
+        response = req.get(
+            f"{self.url}:{self.port}/collections/{collection_name}",
+            headers={"x-typesense-api-key": self.api_key},
+        )
+
+        if response.status_code == 401:
+            logger.error("Invalid API key")
+            raise InvalidApiKey("Invalid API key")
+        elif response.status_code == 404:
+            raise CollectionNotFound("No collection found")
+        elif response.status_code != 200:
+            logger.error("Error calling the API")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
+
+        return response.json()
+
+    def get_all_collections(self):
+        """This function returns all the collections in the database
+
+        Returns:
+            json: response with a list of json containing information of the collections
+
+        Raises:
+            CollectionNotFound: If the collection is not found
+            InvalidApiKey: If the API key
+        """
+        response = req.get(
+            f"{self.url}:{self.port}/collections",
+            headers={"x-typesense-api-key": self.api_key},
+        )
+        if response.status_code == 401:
+            logger.error("Invalid API key")
+            raise InvalidApiKey("Invalid API key")
+        elif response.status_code != 200:
+            logger.error("Error calling the API")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
 
         return response.json()
 
@@ -203,13 +239,26 @@ class HybridSearch:
         response = req.post(
             f"{self.url}:{self.port}/create-document",
             headers={"x-typesense-api-key": self.api_key},
-            params={"name": collection_name},
+            params={"collection_name": collection_name},
             json=document.model_dump(),
         )
 
+        if response.status_code == 401:
+            logger.error("Invalid API key")
+            raise InvalidApiKey("Invalid API key")
+
+        if response.status_code == 404:
+            logger.error("Collection not found")
+            raise CollectionNotFound(collection_name)
+
+        if response.status_code == 406:
+            logger.error("Invalid request")
+            raise InvalidRequest("Invalid request")
+
         if response.status_code != 200:
             logger.error("Error calling the API")
-            raise GenericError("Error calling the API")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
 
         return response.json()
 
@@ -226,15 +275,57 @@ class HybridSearch:
         response = req.post(
             f"{self.url}:{self.port}/create-entry",
             headers={"x-typesense-api-key": self.api_key},
-            params={"name": collection_name},
+            params={"collection_name": collection_name},
             json=entry.model_dump(),
         )
 
+        if response.status_code == 401:
+            logger.error("Invalid API key")
+            raise InvalidApiKey("Invalid API key")
+
+        if response.status_code == 404:
+            logger.error("Collection not found")
+            raise CollectionNotFound(collection_name)
+
+        if response.status_code == 406:
+            logger.error("Invalid request")
+            raise InvalidRequest("Invalid request")
+
         if response.status_code != 200:
             logger.error("Error calling the API")
-            raise GenericError("Error calling the API")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
 
         return response.json()
+
+    def delete_collection(self, collection_name: str):
+        """This function deletes the collection with the given name.
+
+        Args:
+            collection_name (str): Name of the collection
+
+        Returns:
+            json: response
+        """
+        response = req.delete(
+            f"{self.url}:{self.port}/collections-delete/{collection_name}",
+            headers={"x-typesense-api-key": self.api_key},
+        )
+
+        if response.status_code == 401:
+            logger.error("Invalid API key")
+            raise InvalidApiKey("Invalid API key")
+
+        if response.status_code == 404:
+            logger.error("Collection not found")
+            raise CollectionNotFound(collection_name)
+
+        if response.status_code != 200:
+            logger.error("Error calling the API")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
+
+        return True
 
     def delete_documents(
         self,
@@ -262,9 +353,22 @@ class HybridSearch:
             },
         )
 
+        if response.status_code == 401:
+            logger.error("Invalid API key")
+            raise InvalidApiKey("Invalid API key")
+
+        if response.status_code == 404:
+            logger.error("Collection not found")
+            raise CollectionNotFound(collection_name)
+
+        if response.status_code == 406:
+            logger.error("Invalid request")
+            raise InvalidRequest("Invalid request")
+
         if response.status_code != 200:
             logger.error("Error calling the API")
-            raise GenericError("Error calling the API")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
 
         return True
 
@@ -294,29 +398,22 @@ class HybridSearch:
             },
         )
 
-        if response.status_code != 200:
-            logger.error("Error calling the API")
-            raise GenericError("Error calling the API")
+        if response.status_code == 401:
+            logger.error("Invalid API key")
+            raise InvalidApiKey("Invalid API key")
 
-        return True
+        if response.status_code == 404:
+            logger.error("Collection not found")
+            raise CollectionNotFound(collection_name)
 
-    def delete_collection(self, collection_name: str):
-        """This function deletes the collection with the given name.
-
-        Args:
-            collection_name (str): Name of the collection
-
-        Returns:
-            json: response
-        """
-        response = req.delete(
-            f"{self.url}:{self.port}/collections-delete/{collection_name}",
-            headers={"x-typesense-api-key": self.api_key},
-        )
+        if response.status_code == 406:
+            logger.error("Invalid request")
+            raise InvalidRequest("Invalid request")
 
         if response.status_code != 200:
             logger.error("Error calling the API")
-            raise GenericError("Error calling the API")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
 
         return True
 
@@ -352,9 +449,22 @@ class HybridSearch:
             },
         )
 
+        if response.status_code == 401:
+            logger.error("Invalid API key")
+            raise InvalidApiKey("Invalid API key")
+
+        if response.status_code == 404:
+            logger.error("Collection not found")
+            raise CollectionNotFound(collection_name)
+
+        if response.status_code == 406:
+            logger.error("Invalid request")
+            raise InvalidRequest("Invalid request")
+
         if response.status_code != 200:
             logger.error("Error calling the API")
-            raise GenericError("Error calling the API")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
 
         return response.json()
 
@@ -393,9 +503,22 @@ class HybridSearch:
             },
         )
 
+        if response.status_code == 401:
+            logger.error("Invalid API key")
+            raise InvalidApiKey("Invalid API key")
+
+        if response.status_code == 404:
+            logger.error("Collection not found")
+            raise CollectionNotFound(collection_name)
+
+        if response.status_code == 406:
+            logger.error("Invalid request")
+            raise InvalidRequest("Invalid request")
+
         if response.status_code != 200:
             logger.error("Error calling the API")
-            raise GenericError("Error calling the API")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
 
         return response.json()
 
@@ -440,9 +563,22 @@ class HybridSearch:
             json=payload,
         )
 
+        if response.status_code == 401:
+            logger.error("Invalid API key")
+            raise InvalidApiKey("Invalid API key")
+
+        if response.status_code == 404:
+            logger.error("Collection not found")
+            raise CollectionNotFound(collection_name)
+
+        if response.status_code == 406:
+            logger.error("Invalid request")
+            raise InvalidRequest("Invalid request")
+
         if response.status_code != 200:
             logger.error("Error calling the API")
-            raise GenericError("Error calling the API")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
 
         return response.json()
 
@@ -457,9 +593,14 @@ class HybridSearch:
             headers={"x-typesense-api-key": self.api_key},
         )
 
+        if response.status_code == 401:
+            logger.error("Invalid API key")
+            raise InvalidApiKey("Invalid API key")
+
         if response.status_code != 200:
             logger.error("Error calling the API")
-            raise GenericError("Error calling the API")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
 
         return response.json()
 
@@ -474,9 +615,14 @@ class HybridSearch:
             headers={"x-typesense-api-key": self.api_key},
         )
 
+        if response.status_code == 401:
+            logger.error("Invalid API key")
+            raise InvalidApiKey("Invalid API key")
+
         if response.status_code != 200:
             logger.error("Error calling the API")
-            raise GenericError("Error calling the API")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
 
         return response.json()
 
@@ -491,8 +637,13 @@ class HybridSearch:
             headers={"x-typesense-api-key": self.api_key},
         )
 
+        if response.status_code == 401:
+            logger.error("Invalid API key")
+            raise InvalidApiKey("Invalid API key")
+
         if response.status_code != 200:
             logger.error("Error calling the API")
-            raise GenericError("Error calling the API")
+            error = response.json()["detail"]
+            raise ServerError(error["error_type"], error["strerror"])
 
         return response.json()

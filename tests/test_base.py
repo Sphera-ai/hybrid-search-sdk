@@ -10,6 +10,11 @@ from hybridsearch import (
     HybridSearch,
     Preprocessing,
 )
+from hybridsearch.exceptions import (
+    CollectionAlreadyExists,
+    CollectionNotFound,
+    InvalidApiKey,
+)
 
 """
 This file contains the tests for the base class HybridSearch
@@ -28,7 +33,7 @@ def test_init():
     assert True
 
 
-def test_init_should_raise_exeption_when_api_key_is_invalid():
+def test_invalid_key():
     """
     This function tests the __init__ function of the HybridSearch class
     It assert that the object is created successfully without any exceptions
@@ -36,8 +41,11 @@ def test_init_should_raise_exeption_when_api_key_is_invalid():
 
     try:
         HybridSearch(api_key="invalid")
+    except InvalidApiKey:
+        assert True
     except Exception as e:
-        assert str(e) == "Invalid API Key"
+        print(e)
+        assert False
 
 
 def test_document_collection():
@@ -46,7 +54,7 @@ def test_document_collection():
     It assert that the object is created successfully without any exceptions
     """
 
-    random_int = randint(1, 1000)
+    random_int = randint(1, 10000)
     hybrid_search = HybridSearch(api_key=demo_api_key)
     hybrid_search.create_collection(f"test_collection_{random_int}")
     c = hybrid_search.get_all_collections()
@@ -85,7 +93,7 @@ def test_custom_collection():
     It assert that the object is created successfully without any exceptions
     """
 
-    random_int = randint(1, 1000)
+    random_int = randint(1, 10000)
     hybrid_search = HybridSearch(api_key=demo_api_key)
     schema = {
         "fields": [
@@ -172,44 +180,92 @@ def test_supported_documents():
     assert len(supported_documents["supported_mimetypes"]) > 0
 
 
-"""
-Create custom collection
-1 - Embedding field not found
-2 - Model name already exists
-3 - Schema not in the correct format
-"""
+def test_already_existing_cutom_collection():
+    """
+    This function tests the already_existing_collection function of the HybridSearch class
+    It assert that the object is created successfully without any exceptions
+    """
 
-"""
-Get collection by name
-1 - Collection name not found
-"""
+    random_int = randint(1, 10000)
+    hybrid_search = HybridSearch(api_key=demo_api_key)
+    schema = {
+        "fields": [
+            {"name": ".*", "type": "auto"},
+            {"name": "text", "type": "string"},
+            {
+                "name": "embedding",
+                "type": "float[]",
+                "embed": {
+                    "from": ["text"],
+                    "model_config": {
+                        "model_name": EmbeddingModel.MULTILINGUAL_E5_SMALL.value
+                    },
+                },
+            },
+            {"name": "message_id", "type": "int32"},
+            {"name": "chat_id", "type": "int32"},
+            {"name": "role", "type": "string"},
+        ],
+    }
+    hybrid_search.create_custom_collection(
+        f"test_collection_{random_int}", schema=schema
+    )
+    try:
+        hybrid_search.create_custom_collection(
+            f"test_collection_{random_int}", schema=schema
+        )
+        exception_raised = False
+    except CollectionAlreadyExists:
+        exception_raised = True
+    except Exception as e:
+        print(e)
+        exception_raised = False
+    finally:
+        hybrid_search.delete_collection(f"test_collection_{random_int}")
 
-"""
-create_document
-1 - Collection name not found
-"""
+    assert exception_raised
 
-"""
-delete collection
-1 - Collection name not found
-"""
 
-"""
-semantic_search
-1 - Collection name not found
-2 - Query is empty
-3 - Number of results should  be greater than 0
-"""
+def test_already_existing_collection():
+    """
+    This function tests the already_existing_collection function of the HybridSearch class
+    It assert that the object is created successfully without any exceptions
+    """
 
-"""
-hybrid search
-1 - Collection name not found
-2 - Query is empty
-3 - Number of results should  be greater than 0
-4 - Field not in the collection
-"""
+    random_int = randint(1, 10000)
+    hybrid_search = HybridSearch(api_key=demo_api_key)
+    hybrid_search.create_collection(f"test_collection_{random_int}")
+    try:
+        hybrid_search.create_collection(f"test_collection_{random_int}")
+        exception_raised = False
+    except CollectionAlreadyExists:
+        exception_raised = True
+    except Exception as e:
+        print(e)
+        exception_raised = False
+    finally:
+        hybrid_search.delete_collection(f"test_collection_{random_int}")
 
-"""
-get schema attributes
-1 - Collection name not found
-"""
+    assert exception_raised
+
+
+def test_collection_not_existing():
+    """
+    This function tests the collection_not_existing function of the HybridSearch class
+    It assert that the object is created successfully without any exceptions
+    """
+
+    random_int = randint(1, 10000)
+    hybrid_search = HybridSearch(api_key=demo_api_key)
+    hybrid_search.create_collection(f"test_collection_{random_int}")
+    try:
+        hybrid_search.delete_collection(f"test_collection_{random_int + 1}")
+        exception_raised = False
+    except CollectionNotFound:
+        exception_raised = True
+    except Exception as e:
+        print(e)
+        exception_raised = False
+    finally:
+        hybrid_search.delete_collection(f"test_collection_{random_int}")
+    assert exception_raised
