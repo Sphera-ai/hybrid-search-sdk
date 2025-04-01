@@ -15,6 +15,7 @@ from hybridsearch.exceptions import (
     CollectionNotFound,
     InvalidApiKey,
 )
+from hybridsearch.models import Filter, Operator
 
 """
 This file contains the tests for the base class HybridSearch
@@ -269,3 +270,34 @@ def test_collection_not_existing():
     finally:
         hybrid_search.delete_collection(f"test_collection_{random_int}")
     assert exception_raised
+
+
+def test_filters():
+    """
+    This function tests the filters function of the HybridSearch class
+    It assert that the object is created successfully without any exceptions
+    """
+
+    random_int = randint(1, 10000)
+    hybrid_search = HybridSearch(api_key=demo_api_key)
+    hybrid_search.create_collection(f"test_collection_{random_int}")
+
+    doc = Document(
+        preprocessing=Preprocessing(),
+        default_fields=DocumentInformations(file_id="test_file"),
+        file="https://css4.pub/2015/textbook/somatosensory.pdf",
+        fields={},
+    )
+    hybrid_search.create_document(f"test_collection_{random_int}", doc)
+    res = hybrid_search.hybrid_search(
+        collection_name=f"test_collection_{random_int}",
+        query="sensory information in receptors",
+        num_results=2,
+        ft_search_field="text",
+        filters=[Filter(field="page", operator=Operator.EQUAL, value=0)],
+    )
+    pages = [result["document"]["page"] for result in res]
+    assert res is not None
+    assert all(page == 0 for page in pages)
+
+    hybrid_search.delete_collection(f"test_collection_{random_int}")

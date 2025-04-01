@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Any
 
-from pydantic import BaseModel, conset
+from pydantic import BaseModel, conset, field_validator
 
 
 class ChunkMod(str, Enum):
@@ -167,3 +168,34 @@ class SearchResponse:
             )
             for document in self.result
         ]
+
+
+class Operator(str, Enum):
+    EQUAL = "="
+    NOT_EQUAL = "!="
+    GREATER_THAN = ">"
+    LESS_THAN = "<"
+    GREATER_THAN_EQUAL = ">="
+    LESS_THAN_EQUAL = "<="
+    RANGE = "RANGE"
+    IN = "IN"
+    OR = "OR"
+    AND = "AND"
+    PREFIX = "PREFIX"
+    CONTAINS = "CONTAINS"
+    NOT_CONTAINS = "NOT_CONTAINS"
+
+    class Config:
+        use_enum_values = True
+
+
+class Filter(BaseModel):
+    field: str
+    operator: Operator
+    value: Any
+
+    @field_validator("operator")
+    def check_operator(cls, v):
+        if v not in Operator.__members__.values():
+            raise ValueError("Invalid operator")
+        return v

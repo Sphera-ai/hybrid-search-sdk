@@ -17,6 +17,7 @@ To use the Hybrid Search SDK, you need to import the `HybridSearch` class from t
 ```python
 from hybridsearch import HybridSearch
 ```
+
 For more detailed documentation see `src/readme.md`
 
 ## Definitions
@@ -26,6 +27,7 @@ For more detailed documentation see `src/readme.md`
 In Typesense, a collection is a logical grouping of documents. It represents a searchable entity, such as a product catalog or a knowledge base. You can createand delete collections using the Hybrid Search SDK.
 
 ### Schema
+
 A schema defines the structure of the documents within a collection. It specifies the fields and their data types. You can define a schema for a collection using the Hybrid Search SDK.
 
 ### Query

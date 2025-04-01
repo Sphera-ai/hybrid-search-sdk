@@ -6,6 +6,8 @@ from hybridsearch.models import (
     DocumentInformations,
     EmbeddingModel,
     Entry,
+    Filter,
+    Operator,
     Preprocessing,
     ReRankModel,
 )
@@ -18,4 +20,6 @@ __all__ = [
     "Entry",
     "Preprocessing",
     "ReRankModel",
+    "Filter",
+    "Operator",
 ]

@@ -11,7 +11,7 @@ from .exceptions import (
     InvalidRequest,
     ServerError,
 )
-from .models import Document, EmbeddingModel, Entry, ReRankModel
+from .models import Document, EmbeddingModel, Entry, Filter, ReRankModel
 
 
 class HybridSearch:
@@ -424,6 +424,7 @@ class HybridSearch:
         num_results: int,
         rerank: bool = False,
         rerank_model: ReRankModel = ReRankModel.BGE_RERANKER_LARGE,
+        filters: list[Filter] | None = None,
     ):
         """This function performs a semantic search on the specified collection.
 
@@ -433,21 +434,36 @@ class HybridSearch:
             num_results (int): Number of results
             rerank (bool, optional): If True, rerank the results. Defaults to False.
             rerank_model (ReRankModel): Model to rerank the results. Defaults to ReRankModel.BGE_RERANKER_LARGE.
+            filters (list[Filter], optional): List of filters to apply. Defaults to None.
 
         Returns:
             json: response
         """
-        response = req.post(
-            f"{self.url}:{self.port}/collections-semanticsearch",
-            headers={"x-typesense-api-key": self.api_key},
-            params={
-                "collection_name": collection_name,
-                "query": query,
-                "num_results": num_results,
-                "rerank": rerank,
-                "rerank_model": rerank_model.value,
-            },
-        )
+        if filters is None or len(filters) == 0:
+            response = req.post(
+                f"{self.url}:{self.port}/collections-semanticsearch",
+                headers={"x-typesense-api-key": self.api_key},
+                params={
+                    "collection_name": collection_name,
+                    "query": query,
+                    "num_results": num_results,
+                    "rerank": rerank,
+                    "rerank_model": rerank_model.value,
+                },
+            )
+        else:
+            response = req.post(
+                f"{self.url}:{self.port}/collections-semanticsearch",
+                headers={"x-typesense-api-key": self.api_key},
+                params={
+                    "collection_name": collection_name,
+                    "query": query,
+                    "num_results": num_results,
+                    "rerank": rerank,
+                    "rerank_model": rerank_model.value,
+                },
+                json=[f.model_dump() for f in filters],
+            )
 
         if response.status_code == 401:
             logger.error("Invalid API key")
@@ -476,6 +492,7 @@ class HybridSearch:
         ft_search_field: str,
         rerank: bool = False,
         rerank_model: ReRankModel = ReRankModel.BGE_RERANKER_LARGE,
+        filters: list[Filter] | None = None,
     ):
         """This function performs a hybrid search on the collection, combining semantic search and full text search
         on a field or fields choose by the user
@@ -487,81 +504,38 @@ class HybridSearch:
             ft_search_field (str): field to execute the full text search
             rerank (bool, optional): If True, rerank the results. Defaults to False.
             rerank_model (ReRankModel): Model to rerank the results. Defaults to ReRankModel.BGE_RERANKER_LARGE.
+            filters (list[Filter], optional): List of filters to apply. Defaults to None.
+
         Returns:
             response: json
         """
-        response = req.post(
-            f"{self.url}:{self.port}/collections-hybridsearch",
-            headers={"x-typesense-api-key": self.api_key},
-            params={
-                "collection_name": collection_name,
-                "query": query,
-                "num_results": num_results,
-                "search_field": ft_search_field,
-                "rerank": rerank,
-                "rerank_model": rerank_model.value,
-            },
-        )
-
-        if response.status_code == 401:
-            logger.error("Invalid API key")
-            raise InvalidApiKey("Invalid API key")
-
-        if response.status_code == 404:
-            logger.error("Collection not found")
-            raise CollectionNotFound(collection_name)
-
-        if response.status_code == 406:
-            logger.error("Invalid request")
-            raise InvalidRequest("Invalid request")
-
-        if response.status_code != 200:
-            logger.error("Error calling the API")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
-
-        return response.json()
-
-    def hybrid_search_filter(
-        self,
-        collection_name: str,
-        query: str,
-        num_results: int,
-        ft_search_field: str,
-        rerank: bool = False,
-        rerank_model: ReRankModel = ReRankModel.BGE_RERANKER_LARGE,
-        filters: list | None = None,
-    ):
-        """This function performs a hybrid search on the collection, combining semantic search and full text search
-        on a field or fields choose by the user
-
-        Args:
-            collection_name (str): collection name. Can be a comma-separated list of collections
-            query (str): Query to search
-            num_results (int): Number of results
-            ft_search_field (str): field to execute the full text search
-            rerank (bool, optional): If True, rerank the results. Defaults to False.
-            rerank_model (ReRankModel): Model to rerank the results. Defaults to ReRankModel.BGE_RERANKER_LARGE.
-            filters (list, optional): List of filters to apply. Defaults to None.
-        Returns:
-            response: json
-        """
-
-        payload = {
-            "collection_name": collection_name,
-            "query": query,
-            "num_results": num_results,
-            "search_field": ft_search_field,
-            "rerank": rerank,
-            "rerank_model": rerank_model.value,
-            "filters": filters,
-        }
-
-        response = req.post(
-            f"{self.url}:{self.port}/hybridsearch_filter",
-            headers={"x-typesense-api-key": self.api_key},
-            json=payload,
-        )
+        if filters is None or len(filters) == 0:
+            response = req.post(
+                f"{self.url}:{self.port}/collections-hybridsearch",
+                headers={"x-typesense-api-key": self.api_key},
+                params={
+                    "collection_name": collection_name,
+                    "query": query,
+                    "num_results": num_results,
+                    "search_field": ft_search_field,
+                    "rerank": rerank,
+                    "rerank_model": rerank_model.value,
+                },
+            )
+        else:
+            response = req.post(
+                f"{self.url}:{self.port}/collections-hybridsearch",
+                headers={"x-typesense-api-key": self.api_key},
+                params={
+                    "collection_name": collection_name,
+                    "query": query,
+                    "num_results": num_results,
+                    "search_field": ft_search_field,
+                    "rerank": rerank,
+                    "rerank_model": rerank_model.value,
+                },
+                json=[f.model_dump() for f in filters],
+            )
 
         if response.status_code == 401:
             logger.error("Invalid API key")
