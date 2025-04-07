@@ -114,6 +114,7 @@ class HybridSearch:
         self,
         collection_name: str,
         model_name: EmbeddingModel = EmbeddingModel.MULTILINGUAL_E5_SMALL,
+        prev_next_chunks: bool = False,
     ):
         """This function creates a document collection in the database,
         with a text field which is embedded with the model specified or the default ts/multilingual-e5-small.
@@ -130,8 +131,23 @@ class HybridSearch:
             file_id: string
         }
 
+        If prev_next_chunks is True, the schema will be:
+        {
+            id: string
+            embedding: float,
+            text: string,
+            start_sentence: int,
+            end_sentence: int,
+            page: int,
+            file_id: string
+            prev_chunk: string not indexed
+            next_chunk: string not indexed
+        }
+
         Args:
             collection_name (str, required): Name of the collection
+            model_name (EmbeddingModel): The model to use for embeddings. Defaults to EmbeddingModel.MULTILINGUAL_E5_SMALL.
+            prev_next_chunks (bool): Whether to include previous and next chunks texts in the schema. Defaults to False.
 
         Returns:
             response: dict
@@ -142,7 +158,11 @@ class HybridSearch:
         response = req.post(
             f"{self.url}:{self.port}/create-collection",
             headers={"x-typesense-api-key": self.api_key},
-            params={"collection_name": collection_name, "model_name": model_name.value},
+            params={
+                "collection_name": collection_name,
+                "model_name": model_name.value,
+                "prev_next_chunks": prev_next_chunks,
+            },
         )
 
         if response.status_code == 401:

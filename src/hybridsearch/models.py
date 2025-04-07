@@ -46,6 +46,7 @@ class Preprocessing(BaseModel):
     semantic_chunk_model: str = (
         "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     )
+    semantic_thr_std: float = 1.0
 
 
 class DocumentInformations(BaseModel):

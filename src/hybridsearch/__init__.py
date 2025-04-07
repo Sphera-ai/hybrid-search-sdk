@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from hybridsearch.hybridsearch import HybridSearch
 from hybridsearch.models import (
+    ChunkMod,
     Document,
     DocumentInformations,
     EmbeddingModel,
@@ -22,4 +23,5 @@ __all__ = [
     "ReRankModel",
     "Filter",
     "Operator",
+    "ChunkMod",
 ]

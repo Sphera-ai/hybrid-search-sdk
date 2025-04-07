@@ -3,6 +3,7 @@ from __future__ import annotations
 from random import randint
 
 from hybridsearch import (
+    ChunkMod,
     Document,
     DocumentInformations,
     EmbeddingModel,
@@ -294,10 +295,51 @@ def test_filters():
         query="sensory information in receptors",
         num_results=2,
         ft_search_field="text",
-        filters=[Filter(field="page", operator=Operator.EQUAL, value=0)],
+        filters=[Filter(field="start_page", operator=Operator.EQUAL, value=0)],
     )
-    pages = [result["document"]["page"] for result in res]
+    pages = [result["document"]["start_page"] for result in res]
     assert res is not None
     assert all(page == 0 for page in pages)
 
     hybrid_search.delete_collection(f"test_collection_{random_int}")
+
+
+def test_semantic_chunks():
+    """
+    This function tests the document_collection function of the HybridSearch class
+    It assert that the object is created successfully without any exceptions
+    """
+
+    random_int = randint(1, 10000)
+    hybrid_search = HybridSearch(api_key=demo_api_key)
+    hybrid_search.create_collection(
+        f"test_collection_{random_int}", prev_next_chunks=True
+    )
+    c = hybrid_search.get_all_collections()
+    collection_present = any(
+        collection["name"] == f"test_collection_{random_int}" for collection in c
+    )
+    assert collection_present
+
+    doc = Document(
+        preprocessing=Preprocessing(chunk_mode=ChunkMod.SEMANTIC, semantic_thr_std=1.5),
+        default_fields=DocumentInformations(file_id="test_file"),
+        file="https://css4.pub/2015/textbook/somatosensory.pdf",
+        fields={},
+    )
+    hybrid_search.create_document(f"test_collection_{random_int}", doc)
+    res = hybrid_search.hybrid_search(
+        collection_name=f"test_collection_{random_int}",
+        query="sensory information in receptors",
+        num_results=2,
+        ft_search_field="text",
+    )
+    assert res is not None
+
+    hybrid_search.delete_collection(f"test_collection_{random_int}")
+
+    c = hybrid_search.get_all_collections()
+    collection_present = any(
+        collection["name"] == f"test_collection_{random_int}" for collection in c
+    )
+    assert not collection_present
