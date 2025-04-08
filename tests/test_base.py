@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from random import randint
+from time import time
 
 from hybridsearch import (
     ChunkMod,
@@ -10,6 +11,7 @@ from hybridsearch import (
     Entry,
     HybridSearch,
     Preprocessing,
+    ReRankModel,
 )
 from hybridsearch.exceptions import (
     CollectionAlreadyExists,
@@ -334,6 +336,50 @@ def test_semantic_chunks():
         num_results=2,
         ft_search_field="text",
     )
+    assert res is not None
+
+    hybrid_search.delete_collection(f"test_collection_{random_int}")
+
+    c = hybrid_search.get_all_collections()
+    collection_present = any(
+        collection["name"] == f"test_collection_{random_int}" for collection in c
+    )
+    assert not collection_present
+
+
+def test_reranker():
+    """
+    This function tests the document_collection function of the HybridSearch class
+    It assert that the object is created successfully without any exceptions
+    """
+
+    random_int = randint(1, 10000)
+    hybrid_search = HybridSearch(api_key=demo_api_key)
+    hybrid_search.create_collection(f"test_collection_{random_int}")
+    c = hybrid_search.get_all_collections()
+    collection_present = any(
+        collection["name"] == f"test_collection_{random_int}" for collection in c
+    )
+    assert collection_present
+
+    doc = Document(
+        preprocessing=Preprocessing(chunk_mode=ChunkMod.SEMANTIC, semantic_thr_std=1.5),
+        default_fields=DocumentInformations(file_id="test_file"),
+        file="https://css4.pub/2015/textbook/somatosensory.pdf",
+        fields={},
+    )
+    hybrid_search.create_document(f"test_collection_{random_int}", doc)
+    start_time = time()
+    res = hybrid_search.hybrid_search(
+        collection_name=f"test_collection_{random_int}",
+        query="sensory information in receptors",
+        num_results=2,
+        ft_search_field="text",
+        rerank_model=ReRankModel.GTE_MULTILINGUAL_RERANKER_BASE,
+        rerank=True,
+    )
+    end_time = time()
+    print(f"Search time: {end_time - start_time} seconds")
     assert res is not None
 
     hybrid_search.delete_collection(f"test_collection_{random_int}")

@@ -37,6 +37,7 @@ class ReRankModel(Enum):
     # JINA_RERANK_V2 = "jina-rerank-v2"
     BGE_RERANKER_LARGE = "bge-m3-Rerank"
     MXBAI_RERANKER_LARGE = "mxbai-rerank-large-V1"
+    GTE_MULTILINGUAL_RERANKER_BASE = "gte-multilingual-reranker-base"
 
 
 class Preprocessing(BaseModel):

@@ -193,7 +193,7 @@ is_deleted = search_client.delete_documents("example_collection", document_id="1
 
 ### Search Operations
 
-#### `semantic_search(self, collection_name: str, query: str, num_results: int, rerank: bool = False, rerank_model: ReRankModel = ReRankModel.BGE_RERANKER_LARGE, filters: list[Filter] | None = None)`
+#### `semantic_search(self, collection_name: str, query: str, num_results: int, rerank: bool = False, rerank_model: ReRankModel = ReRankModel.GTE_MULTILINGUAL_RERANKER_BASE, filters: list[Filter] | None = None)`
 
 Performs a semantic search on a collection.
 
@@ -202,7 +202,7 @@ Performs a semantic search on a collection.
   - `query` (str, required): Search query.
   - `num_results` (int, required): Number of results to return.
   - `rerank` (bool, optional): Whether to rerank results. Default is `False`.
-  - `rerank_model` (ReRankModel, optional): Rerank model to use. Default is `BGE_RERANKER_LARGE`.
+  - `rerank_model` (ReRankModel, optional): Rerank model to use. Default is `GTE_MULTILINGUAL_RERANKER_BASE`.
   - `filters` (list[Filter], optional): Filters to apply.
 
 - **Returns:**
@@ -216,7 +216,7 @@ results = search_client.semantic_search("example_collection", "example query", 5
 
 ---
 
-#### `hybrid_search(self, collection_name: str, query: str, num_results: int, ft_search_field: str, rerank: bool = False, rerank_model: ReRankModel = ReRankModel.BGE_RERANKER_LARGE, filters: list[Filter] | None = None)`
+#### `hybrid_search(self, collection_name: str, query: str, num_results: int, ft_search_field: str, rerank: bool = False, rerank_model: ReRankModel = ReRankModel.GTE_MULTILINGUAL_RERANKER_BASE, filters: list[Filter] | None = None)`
 
 Performs a hybrid search combining semantic and full-text search.
 
@@ -226,7 +226,7 @@ Performs a hybrid search combining semantic and full-text search.
   - `num_results` (int, required): Number of results to return.
   - `ft_search_field` (str, required): Field for full-text search.
   - `rerank` (bool, optional): Whether to rerank results. Default is `False`.
-  - `rerank_model` (ReRankModel, optional): Rerank model to use. Default is `BGE_RERANKER_LARGE`.
+  - `rerank_model` (ReRankModel, optional): Rerank model to use. Default is `GTE_MULTILINGUAL_RERANKER_BASE`.
   - `filters` (list[Filter], optional): Filters to apply.
 
 - **Returns:**

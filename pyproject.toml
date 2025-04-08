@@ -1,6 +1,6 @@
 [project]
 name = "hybrid_search"
-version = "0.3.0"
+version = "0.3.1"
 description = "Library for hybrid-search"
 readme = "README.md"
 maintainers = [{ name = "Luca Angioloni", email = "luca.angioloni@aidia.it" }]

@@ -443,7 +443,7 @@ class HybridSearch:
         query: str,
         num_results: int,
         rerank: bool = False,
-        rerank_model: ReRankModel = ReRankModel.BGE_RERANKER_LARGE,
+        rerank_model: ReRankModel = ReRankModel.GTE_MULTILINGUAL_RERANKER_BASE,
         filters: list[Filter] | None = None,
     ):
         """This function performs a semantic search on the specified collection.
@@ -453,7 +453,7 @@ class HybridSearch:
             query (str): Query to search
             num_results (int): Number of results
             rerank (bool, optional): If True, rerank the results. Defaults to False.
-            rerank_model (ReRankModel): Model to rerank the results. Defaults to ReRankModel.BGE_RERANKER_LARGE.
+            rerank_model (ReRankModel): Model to rerank the results. Defaults to ReRankModel.GTE_MULTILINGUAL_RERANKER_BASE.
             filters (list[Filter], optional): List of filters to apply. Defaults to None.
 
         Returns:
@@ -511,7 +511,7 @@ class HybridSearch:
         num_results: int,
         ft_search_field: str,
         rerank: bool = False,
-        rerank_model: ReRankModel = ReRankModel.BGE_RERANKER_LARGE,
+        rerank_model: ReRankModel = ReRankModel.GTE_MULTILINGUAL_RERANKER_BASE,
         filters: list[Filter] | None = None,
     ):
         """This function performs a hybrid search on the collection, combining semantic search and full text search
@@ -523,7 +523,7 @@ class HybridSearch:
             num_results (int): Number of results
             ft_search_field (str): field to execute the full text search
             rerank (bool, optional): If True, rerank the results. Defaults to False.
-            rerank_model (ReRankModel): Model to rerank the results. Defaults to ReRankModel.BGE_RERANKER_LARGE.
+            rerank_model (ReRankModel): Model to rerank the results. Defaults to ReRankModel.GTE_MULTILINGUAL_RERANKER_BASE.
             filters (list[Filter], optional): List of filters to apply. Defaults to None.
 
         Returns:
