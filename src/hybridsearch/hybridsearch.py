@@ -15,13 +15,13 @@ from .models import Document, EmbeddingModel, Entry, Filter, ReRankModel
 
 
 class HybridSearch:
-    def __init__(self, api_key: str, url: str = "http://localhost", port: int = 8000):
+    def __init__(self, api_key: str, url: str = "http://localhost", port: int = 8002):
         """This class is used to interact with the microservice typesense+fastapi
 
         Args:
             api_key (str): API key to access the database
             url (str, optional): URL of the microservice. Defaults to "localhost".
-            port (int, optional): Port of the microservice. Defaults to 8000.
+            port (int, optional): Port of the microservice. Defaults to 8002.
         """
 
         self.api_key = api_key

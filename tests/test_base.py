@@ -330,12 +330,15 @@ def test_semantic_chunks():
         fields={},
     )
     hybrid_search.create_document(f"test_collection_{random_int}", doc)
+    start_time = time()
     res = hybrid_search.hybrid_search(
         collection_name=f"test_collection_{random_int}",
         query="sensory information in receptors",
         num_results=2,
         ft_search_field="text",
     )
+    end_time = time()
+    print(f"Search time: {end_time - start_time} seconds")
     assert res is not None
 
     hybrid_search.delete_collection(f"test_collection_{random_int}")
@@ -379,7 +382,7 @@ def test_reranker():
         rerank=True,
     )
     end_time = time()
-    print(f"Search time: {end_time - start_time} seconds")
+    print(f"Search time with Rerank: {end_time - start_time} seconds")
     assert res is not None
 
     hybrid_search.delete_collection(f"test_collection_{random_int}")
