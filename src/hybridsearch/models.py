@@ -16,7 +16,7 @@ class ChunkMod(str, Enum):
 
 class EmbeddingModel(Enum):
     """
-    Insert the path of the model in the enum
+    Enum representing various embedding models
     """
 
     ALL_MINILM_L12_V2 = "ts/all-MiniLM-L12-v2"
@@ -31,6 +31,7 @@ class EmbeddingModel(Enum):
     JINA_EMBEDDINGS_V2_BASE_EN = "ts/jina-embeddings-v2-base-en"
     MULTILINGUAL_E5_LARGE = "ts/multilingual-e5-large"
     MULTILINGUAL_E5_SMALL = "ts/multilingual-e5-small"
+    REMOTE_QWEN_3_8B = "remote/qwen3-embedding-8b"
 
 
 class ReRankModel(Enum):
@@ -38,6 +39,7 @@ class ReRankModel(Enum):
     BGE_RERANKER_LARGE = "bge-m3-Rerank"
     MXBAI_RERANKER_LARGE = "mxbai-rerank-large-V1"
     GTE_MULTILINGUAL_RERANKER_BASE = "gte-multilingual-reranker-base"
+    REMOTE_QWEN_3_8B = "remote/qwen3-reranker-8b"
 
 
 class Preprocessing(BaseModel):

@@ -117,6 +117,7 @@ def test_custom_collection():
             {"name": "chat_id", "type": "int32"},
             {"name": "role", "type": "string"},
         ],
+        "metadata": {"embedding_model": EmbeddingModel.MULTILINGUAL_E5_SMALL.value},
     }
     hybrid_search.create_custom_collection(
         f"test_collection_{random_int}", schema=schema
@@ -210,6 +211,7 @@ def test_already_existing_cutom_collection():
             {"name": "chat_id", "type": "int32"},
             {"name": "role", "type": "string"},
         ],
+        "metadata": {"embedding_model": EmbeddingModel.MULTILINGUAL_E5_SMALL.value},
     }
     hybrid_search.create_custom_collection(
         f"test_collection_{random_int}", schema=schema
@@ -383,6 +385,47 @@ def test_reranker():
     )
     end_time = time()
     print(f"Search time with Rerank: {end_time - start_time} seconds")
+    assert res is not None
+
+    hybrid_search.delete_collection(f"test_collection_{random_int}")
+
+    c = hybrid_search.get_all_collections()
+    collection_present = any(
+        collection["name"] == f"test_collection_{random_int}" for collection in c
+    )
+    assert not collection_present
+
+
+def test_remote_embedding():
+    """
+    This function tests the document_collection function of the HybridSearch class with a remote embedding model
+    """
+    random_int = randint(1, 10000)
+    hybrid_search = HybridSearch(api_key=demo_api_key)
+    hybrid_search.create_collection(
+        f"test_collection_{random_int}", model_name=EmbeddingModel.REMOTE_QWEN_3_8B
+    )
+    c = hybrid_search.get_all_collections()
+    collection_present = any(
+        collection["name"] == f"test_collection_{random_int}" for collection in c
+    )
+    assert collection_present
+
+    doc = Document(
+        preprocessing=Preprocessing(),
+        default_fields=DocumentInformations(file_id="test_file"),
+        file="https://css4.pub/2015/textbook/somatosensory.pdf",
+        fields={},
+    )
+    hybrid_search.create_document(f"test_collection_{random_int}", doc)
+    res = hybrid_search.hybrid_search(
+        collection_name=f"test_collection_{random_int}",
+        query="sensory information in receptors",
+        num_results=2,
+        ft_search_field="text",
+        rerank=True,
+        rerank_model=ReRankModel.REMOTE_QWEN_3_8B,
+    )
     assert res is not None
 
     hybrid_search.delete_collection(f"test_collection_{random_int}")
