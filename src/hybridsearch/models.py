@@ -34,6 +34,13 @@ class EmbeddingModel(Enum):
     REMOTE_QWEN_3_8B = "remote/qwen3-embedding-8b"
 
 
+remote_embedding_models = {
+    EmbeddingModel.REMOTE_QWEN_3_8B: {
+        "embedding_dim": 4096,
+    },
+}
+
+
 class ReRankModel(Enum):
     # JINA_RERANK_V2 = "jina-rerank-v2"
     BGE_RERANKER_LARGE = "bge-m3-Rerank"
