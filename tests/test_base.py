@@ -45,21 +45,33 @@ This file contains the tests for the base class HybridSearch
 demo_api_key = "test"
 
 class FilesTestsUrls:
+    """_summary_
+    File urls to be used in the tests
+    """
     YUGIOH = "https://img.konami.com/yugioh/worldchampionship/2025/data/limitregulation-tcg.pdf"
-    HOCKEY = "https://www.hockeypergine.it/wp-content/uploads/2018/02/colouring_book_iihf.pdf"
+    BASKET = "https://www.itaerferrarin.edu.it/pasw4/didattica/pallacanestro.pdf"
     DOLCI = "https://comune.ravenna.it/wp-content/uploads/2025/09/Ricettario-per-dolci-momenti-insieme.pdf"
     H3_HEADER = "https://gist.github.com/rt2zz/e0a1d6ab2682d2c47746950b84c0b6ee#file-markdown-sample-md"
     INLINE_LINK = "https://raw.githubusercontent.com/mxstbr/markdown-test-file/master/TEST.md"
     INSTALLATION = "https://github.com/othneildrew/Best-README-Template/blob/main/README.md"
+    DRAWIO = "https://cidoc-crm.org/sites/default/files/Draw.io%20to%20Triples.pdf"
+    HOCKEY = "https://www.mobilesport.ch/assets/lbwp-cdn/mobilesport/files/1713775893/mobilesport-hockey-su-ghiaccio-giovani--forme-di-allenamento-relative-alle-forme-caratteristiche.pdf"
+    TENNIS = "https://www.sergvese.it/smba/files/tennis.pdf"
+    VIDEOGAMES = "https://www.chateaudeprangins.ch/chateaudeprangins/medias/games/la-storia-dei-videogiochi-2021_it.pdf"
 
 def setup_document(input_file_id,input_file):
+    """_summary_
+    Setup Document instance for create_document method
+
+    Returns:
+        Document: Document instance
+    """
     return Document(
         preprocessing=Preprocessing(),
         default_fields=DocumentInformations(file_id=input_file_id),
         file=input_file,
         fields={},
     )
-
 
 def test_init():
     """
@@ -471,18 +483,137 @@ def test_invalid_key():
 #     print("CHE COSA ABBIAMO SU INSTALLATION SINGLE SEARCH", res[0]["document"]["text"])
 #     assert True
 
-def test_collection_with_documents_single_installation_with_dolci():
-    # mio test
+# def test_collection_with_documents_single_installation_with_dolci():
+#     # mio test
+#     hybrid_search = HybridSearch(api_key=demo_api_key)
+#     def_name = inspect.currentframe().f_code.co_name
+#     random_int_collections = []
+#     collection_names = []
+#     num_collections = 2
+#     num_results = 10
+#     for i in range(num_collections):
+#         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
+#         collection_names.append(f"test_collection_{random_int_collections[i]}")
+#         hybrid_search.create_collection(collection_names[i])
+
+#     doc_yugioh = setup_document(
+#         "test_file_yugioh",
+#         FilesTestsUrls.YUGIOH
+#     )
+
+#     doc_dolci = setup_document(
+#         "test_file_dolci",
+#         FilesTestsUrls.DOLCI
+#     )
+
+#     doc_md_1 = setup_document(
+#         "test_file_md_1",
+#         FilesTestsUrls.H3_HEADER
+#     )
+
+#     doc_md_3 = setup_document(
+#         "test_file_md_3",
+#         FilesTestsUrls.INSTALLATION
+#     )
+
+#     print("COLLECTION NAME YUGIOH", collection_names[0])
+#     print("COLLECTION NAME DOLCI E H2", collection_names[1])
+
+#     # aggiungo yugioh alla prima collection
+#     hybrid_search.create_document(collection_names[0], doc_yugioh)
+
+#     # aggiungo dolci alla seconda collection
+#     hybrid_search.create_document(collection_names[1], doc_dolci)
+    
+#     # aggiungo file md 1 alla terza collection
+#     hybrid_search.create_document(collection_names[1], doc_md_1)
+
+#     # aggiungo file md 3 alla seconda collection
+#     #hybrid_search.create_document(collection_names[1], doc_md_3)
+#     res = hybrid_search.hybrid_search(
+#         collection_name=collection_names[1],
+#         query="come si fa l'h2 header'",
+#         num_results=num_results,
+#         ft_search_field="text",
+#         rerank=True
+#     )
+#     for elem in res:
+#         elem["document"]["embedding"] = ""
+#     #print("CHE COSA ABBIAMO SU INSTALLATION SINGLE SEARCH", def_name, res[0]["document"]["text"])
+#     print("CHE COSA ABBIAMO SU H2 HEADER SINGLE SEARCH", def_name, res)
+#     for elem in res:
+#         print("SCORE", elem["text_match_info"]["score"])
+
+#     assert True
+
+# def test_collection_with_documents_single_installation_without_dolci():
+#     # mio test
+#     hybrid_search = HybridSearch(api_key=demo_api_key)
+#     random_int_collections = []
+#     collection_names = []
+#     def_name = inspect.currentframe().f_code.co_name
+#     num_collections = 2
+#     num_results = 10
+#     for i in range(num_collections):
+#         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
+#         collection_names.append(f"test_collection_{random_int_collections[i]}")
+#         hybrid_search.create_collection(collection_names[i])
+
+#     doc_yugioh = setup_document(
+#         "test_file_yugioh",
+#         FilesTestsUrls.YUGIOH
+#     )
+
+#     doc_dolci = setup_document(
+#         "test_file_dolci",
+#         FilesTestsUrls.DOLCI
+#     )
+
+#     doc_md_1 = setup_document(
+#         "test_file_md_1",
+#         FilesTestsUrls.H3_HEADER
+#     )
+
+#     doc_md_3 = setup_document(
+#         "test_file_md_3",
+#         FilesTestsUrls.INSTALLATION
+#     )
+
+#     # aggiungo yugioh alla prima collection
+#     hybrid_search.create_document(collection_names[0], doc_yugioh)
+    
+#     # aggiungo file md 1 alla terza collection
+#     hybrid_search.create_document(collection_names[1], doc_md_1)
+
+#     # aggiungo file md 3 alla seconda collection
+#     hybrid_search.create_document(collection_names[1], doc_md_3)
+#     res = hybrid_search.hybrid_search(
+#         collection_name=collection_names[1],
+#         query="come si fa l'installation",
+#         num_results=num_results,
+#         ft_search_field="text",
+#     )
+#     #print("CHE COSA ABBIAMO SU INSTALLATION SINGLE SEARCH", res[0]["document"]["text"])
+#     #print("CHE COSA ABBIAMO SU INSTALLATION SINGLE SEARCH", def_name, res)
+#     assert True
+
+def m_test_three_collections_remote_embedding_hybrid_search():
+    """_summary_
+    Create 3 collections with remote embedding model, add documents to each of these collections
+    and perform hybrid search on these collections, with the query being about basket (last document)
+    Returns:
+        bool: True if basket document is found, False otherwise
+    """
     hybrid_search = HybridSearch(api_key=demo_api_key)
-    def_name = inspect.currentframe().f_code.co_name
     random_int_collections = []
     collection_names = []
-    num_collections = 2
-    num_results = 10
+    def_name = inspect.currentframe().f_code.co_name
+    num_collections = 3
+    num_results = 8
     for i in range(num_collections):
         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
         collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i])
+        hybrid_search.create_collection(collection_names[i],model_name=EmbeddingModel.REMOTE_QWEN_3_8B)
 
     doc_yugioh = setup_document(
         "test_file_yugioh",
@@ -504,7 +635,20 @@ def test_collection_with_documents_single_installation_with_dolci():
         FilesTestsUrls.INSTALLATION
     )
 
-    # aggiungo yugioh alla prima collection
+    doc_drawio = setup_document(
+        "test_drawio",
+        FilesTestsUrls.DRAWIO
+    )
+
+    doc_basket = setup_document(
+        "test_basket",
+        FilesTestsUrls.BASKET
+    )
+
+    # aggiungo file drawio alla terza collection
+    hybrid_search.create_document(collection_names[0], doc_drawio)
+
+    #aggiungo yugioh alla prima collection
     hybrid_search.create_document(collection_names[0], doc_yugioh)
 
     # aggiungo dolci alla seconda collection
@@ -514,138 +658,184 @@ def test_collection_with_documents_single_installation_with_dolci():
     hybrid_search.create_document(collection_names[1], doc_md_1)
 
     # aggiungo file md 3 alla seconda collection
-    #hybrid_search.create_document(collection_names[1], doc_md_3)
-    res = hybrid_search.semantic_search(
-        collection_name=collection_names[1],
-        query="come si fa l'h2 header'",
+    hybrid_search.create_document(collection_names[0], doc_md_3)
+
+    # aggiungo file basket alla prima collection
+    hybrid_search.create_document(collection_names[2], doc_basket)
+    
+
+    collections = ",".join(collection_names)
+    #collections = f"ddd_football,ddd_dolci,ddd_yugioh,utente_6_collection,Test"
+    print("COLLECTIONS", collections)
+    res = hybrid_search.hybrid_search(
+        collection_name=collections,
+        query="cosa abbiamo sul basekt?",
         num_results=num_results,
-        #ft_search_field="text",
-        rerank=True
+        ft_search_field="text",
+        rerank=True,
+        rerank_model = ReRankModel.REMOTE_QWEN_3_8B
     )
     for elem in res:
         elem["document"]["embedding"] = ""
-    #print("CHE COSA ABBIAMO SU INSTALLATION SINGLE SEARCH", def_name, res[0]["document"]["text"])
-    print("CHE COSA ABBIAMO SU H2 HEADER SINGLE SEARCH", def_name, res)
+
     for elem in res:
-        print("SCORE", elem["text_match_info"]["score"])
+        print("FILE NAME", elem["document"]["file_id"])
+        print("FILE ID", elem["document"]["id"])
+        print("TEXT", elem["document"]["text"])
 
-    assert True
+    print("CHE COSA ABBIAMO SU DRAWIO MULTI SEARCH", def_name)
+    assert res[0]["document"]["file_id"] == "test_basket"
 
-def test_collection_with_documents_single_installation_without_dolci():
-    # mio test
+
+def test_six_collections_remote_embedding_hybrid_search():
+    """_summary_
+    Create 6 collections with remote embedding model, add documents to each of these collections
+    and perform hybrid search on these collections, with the query being about videogames (last document)
+    Returns:
+        bool: True if videogames document is found, False otherwise
+    """
     hybrid_search = HybridSearch(api_key=demo_api_key)
     random_int_collections = []
     collection_names = []
     def_name = inspect.currentframe().f_code.co_name
-    num_collections = 2
-    num_results = 10
-    for i in range(num_collections):
-        random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
-        collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i])
+    num_collections = 3
+    num_results = 8
+    # for i in range(num_collections):
+    #     random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
+    #     collection_names.append(f"test_collection_{random_int_collections[i]}")
+    #     hybrid_search.create_collection(collection_names[i],model_name=EmbeddingModel.REMOTE_QWEN_3_8B)
 
-    doc_yugioh = setup_document(
-        "test_file_yugioh",
-        FilesTestsUrls.YUGIOH
-    )
+    # doc_yugioh = setup_document(
+    #     "test_file_yugioh",
+    #     FilesTestsUrls.YUGIOH
+    # )
 
-    doc_dolci = setup_document(
-        "test_file_dolci",
-        FilesTestsUrls.DOLCI
-    )
+    # doc_dolci = setup_document(
+    #     "test_file_dolci",
+    #     FilesTestsUrls.DOLCI
+    # )
 
-    doc_md_1 = setup_document(
-        "test_file_md_1",
-        FilesTestsUrls.H3_HEADER
-    )
+    # doc_md_1 = setup_document(
+    #     "test_file_md_1",
+    #     FilesTestsUrls.H3_HEADER
+    # )
 
-    doc_md_3 = setup_document(
-        "test_file_md_3",
-        FilesTestsUrls.INSTALLATION
-    )
+    # doc_md_3 = setup_document(
+    #     "test_file_md_3",
+    #     FilesTestsUrls.INSTALLATION
+    # )
 
-    # aggiungo yugioh alla prima collection
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
+    # doc_drawio = setup_document(
+    #     "test_drawio",
+    #     FilesTestsUrls.DRAWIO
+    # )
+
+    # doc_basket = setup_document(
+    #     "test_basket",
+    #     FilesTestsUrls.BASKET
+    # )
+
+    # doc_tennis = setup_document(
+    #     "test_tennis",
+    #     FilesTestsUrls.TENNIS
+    # )
+
+    # doc_videogames = setup_document(
+    #     "test_videogames",
+    #     FilesTestsUrls.VIDEOGAMES
+    # )
+
+    # doc_hockey = setup_document(
+    #     "test_hockey",
+    #     FilesTestsUrls.HOCKEY
+    # )
+
+    # doc_inline = setup_document(
+    #     "test_inline",
+    #     FilesTestsUrls.INLINE_LINK
+    # )
+
+    # # aggiungo file drawio alla terza collection
+    # hybrid_search.create_document(collection_names[0], doc_drawio)
+
+    # #aggiungo yugioh alla prima collection
+    # hybrid_search.create_document(collection_names[0], doc_yugioh)
+
+    # # aggiungo dolci alla seconda collection
+    # hybrid_search.create_document(collection_names[1], doc_dolci)
     
-    # aggiungo file md 1 alla terza collection
-    hybrid_search.create_document(collection_names[1], doc_md_1)
+    # # aggiungo file md 1 alla terza collection
+    # hybrid_search.create_document(collection_names[1], doc_md_1)
 
-    # aggiungo file md 3 alla seconda collection
-    hybrid_search.create_document(collection_names[1], doc_md_3)
-    res = hybrid_search.hybrid_search(
-        collection_name=collection_names[1],
-        query="come si fa l'installation",
-        num_results=num_results,
-        ft_search_field="text",
-    )
-    #print("CHE COSA ABBIAMO SU INSTALLATION SINGLE SEARCH", res[0]["document"]["text"])
-    #print("CHE COSA ABBIAMO SU INSTALLATION SINGLE SEARCH", def_name, res)
-    assert True
+    # # aggiungo file md 3 alla seconda collection
+    # hybrid_search.create_document(collection_names[0], doc_md_3)
 
-def test_collection_with_documents_single_installation_with_dolci_in_first_collection():
-    # mio test
-    hybrid_search = HybridSearch(api_key=demo_api_key)
-    random_int_collections = []
-    collection_names = []
-    def_name = inspect.currentframe().f_code.co_name
-    num_collections = 2
-    num_results = 10
-    for i in range(num_collections):
-        random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
-        collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i])
+    # # aggiungo file basket alla prima collection
+    # hybrid_search.create_document(collection_names[2], doc_basket)
 
-    doc_yugioh = setup_document(
-        "test_file_yugioh",
-        FilesTestsUrls.YUGIOH
-    )
+    # # aggiungo file tennis alla prima collection
+    # hybrid_search.create_document(collection_names[2], doc_tennis)
 
-    doc_dolci = setup_document(
-        "test_file_dolci",
-        FilesTestsUrls.DOLCI
-    )
+    # # aggiungo file videogames alla prima collection
+    # hybrid_search.create_document(collection_names[0], doc_videogames)
 
-    doc_md_1 = setup_document(
-        "test_file_md_1",
-        FilesTestsUrls.H3_HEADER
-    )
+    # # aggiungo file hockey alla prima collection
+    # hybrid_search.create_document(collection_names[2], doc_hockey)
 
-    doc_md_3 = setup_document(
-        "test_file_md_3",
-        FilesTestsUrls.INSTALLATION
-    )
-
-    # aggiungo yugioh alla prima collection
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-
-    # aggiungo dolci alla seconda collection
-    hybrid_search.create_document(collection_names[0], doc_dolci)
+    # # aggiungo file basket alla prima collection
+    # hybrid_search.create_document(collection_names[2], doc_inline)
     
-    # aggiungo file md 1 alla terza collection
-    hybrid_search.create_document(collection_names[1], doc_md_1)
 
-    # aggiungo file md 3 alla seconda collection
-    #hybrid_search.create_document(collection_names[1], doc_md_3)
+    #collections = ",".join(collection_names)
+    collections = f"test_collection_67539514,test_collection_46669628,test_collection_40931096"
+    print("COLLECTIONS", collections)
     res = hybrid_search.hybrid_search(
-        collection_name=collection_names[1],
-        query="come funziona l'h3 header",
+        collection_name=collections,
+        query="Il personaggio Lara Croft?",
         num_results=num_results,
         ft_search_field="text",
-    )
-    #print("CHE COSA ABBIAMO SU H3_HEADER SINGLE SEARCH", res[0]["document"]["text"])
-
-    res = hybrid_search.hybrid_search(
-        collection_name=[collection_names[0],collection_names[1]],
-        query="cosa abbiamo su yugioh",
-        num_results=num_results,
-        ft_search_field="text",
+        rerank=True,
+        rerank_model = ReRankModel.REMOTE_QWEN_3_8B
     )
     for elem in res:
         elem["document"]["embedding"] = ""
-    #print("CHE COSA ABBIAMO SU DOLCI SINGLE SEARCH", res[0]["document"]["text"])
-    #print("CHE COSA ABBIAMO SU YUGIOH SINGLE SEARCH", def_name, res)
-    assert True
 
+    for elem in res:
+        print("FILE NAME", elem["document"]["file_id"])
+        print("FILE ID", elem["document"]["id"])
+        print("TEXT", elem["document"]["text"])
+        print("RFF", elem["document"]["reciprocal_rank_fusion"])
+
+    print("CHE COSA ABBIAMO SU DRAWIO MULTI SEARCH", def_name)
+    assert res[0]["document"]["file_id"] == "test_videogames"
+
+
+def m_test_collection_with_documents_single_installation_with_dolci_in_first_collection():
+    # mio test
+    hybrid_search = HybridSearch(api_key=demo_api_key)
+    collection_names = ['test_collection_11816543', 'test_collection_4714976', 'test_collection_15667239']
+    num_results = 8
+    def_name = inspect.currentframe().f_code.co_name
+    collections = ",".join(collection_names)
+    print("COLLECTIONS", collections)
+    res = hybrid_search.hybrid_search(
+        collection_name=collections,
+        query="cosa abbiamo su h3 header",
+        num_results=num_results,
+        ft_search_field="text",
+        rerank=True,
+        rerank_model = ReRankModel.REMOTE_QWEN_3_8B
+    )
+    for elem in res:
+        elem["document"]["embedding"] = ""
+
+    for elem in res:
+        print("FILE NAME", elem["document"]["file_id"])
+        print("FILE ID", elem["document"]["id"])
+        print("TEXT", elem["document"]["text"])
+
+    print("CHE COSA ABBIAMO SU DRAWIO MULTI SEARCH", def_name)
+    assert res[0]["document"]["file_id"] == "test_file_md_1"
 
 # def test_document_collection():
 #     """
