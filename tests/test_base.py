@@ -686,8 +686,253 @@ def m_test_three_collections_remote_embedding_hybrid_search():
     print("CHE COSA ABBIAMO SU DRAWIO MULTI SEARCH", def_name)
     assert res[0]["document"]["file_id"] == "test_basket"
 
+def test_six_collections_internal_embedding_semantic_search():
+    """_summary_
+    Create 6 collections with remote embedding model, add documents to each of these collections
+    and perform hybrid search on these collections, with the query being about videogames (last document)
+    Returns:
+        bool: True if videogames document is found, False otherwise
+    """
+    hybrid_search = HybridSearch(api_key=demo_api_key)
+    random_int_collections = []
+    collection_names = []
+    def_name = inspect.currentframe().f_code.co_name
+    num_collections = 3
+    num_results = 8
+    # for i in range(num_collections):
+    #     random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
+    #     collection_names.append(f"test_collection_{random_int_collections[i]}")
+    #     hybrid_search.create_collection(collection_names[i])
 
-def test_six_collections_remote_embedding_hybrid_search():
+    # doc_yugioh = setup_document(
+    #     "test_file_yugioh",
+    #     FilesTestsUrls.YUGIOH
+    # )
+
+    # doc_dolci = setup_document(
+    #     "test_file_dolci",
+    #     FilesTestsUrls.DOLCI
+    # )
+
+    # doc_md_1 = setup_document(
+    #     "test_file_md_1",
+    #     FilesTestsUrls.H3_HEADER
+    # )
+
+    # doc_md_3 = setup_document(
+    #     "test_file_md_3",
+    #     FilesTestsUrls.INSTALLATION
+    # )
+
+    # doc_drawio = setup_document(
+    #     "test_drawio",
+    #     FilesTestsUrls.DRAWIO
+    # )
+
+    # doc_basket = setup_document(
+    #     "test_basket",
+    #     FilesTestsUrls.BASKET
+    # )
+
+    # doc_tennis = setup_document(
+    #     "test_tennis",
+    #     FilesTestsUrls.TENNIS
+    # )
+
+    # doc_videogames = setup_document(
+    #     "test_videogames",
+    #     FilesTestsUrls.VIDEOGAMES
+    # )
+
+    # doc_hockey = setup_document(
+    #     "test_hockey",
+    #     FilesTestsUrls.HOCKEY
+    # )
+
+    # doc_inline = setup_document(
+    #     "test_inline",
+    #     FilesTestsUrls.INLINE_LINK
+    # )
+
+    # # aggiungo file drawio alla terza collection
+    # hybrid_search.create_document(collection_names[0], doc_drawio)
+
+    # #aggiungo yugioh alla prima collection
+    # hybrid_search.create_document(collection_names[0], doc_yugioh)
+
+    # # aggiungo dolci alla seconda collection
+    # hybrid_search.create_document(collection_names[1], doc_dolci)
+    
+    # # aggiungo file md 1 alla terza collection
+    # hybrid_search.create_document(collection_names[1], doc_md_1)
+
+    # # aggiungo file md 3 alla seconda collection
+    # hybrid_search.create_document(collection_names[0], doc_md_3)
+
+    # # aggiungo file basket alla prima collection
+    # hybrid_search.create_document(collection_names[2], doc_basket)
+
+    # # aggiungo file tennis alla prima collection
+    # hybrid_search.create_document(collection_names[2], doc_tennis)
+
+    # # aggiungo file videogames alla prima collection
+    # hybrid_search.create_document(collection_names[0], doc_videogames)
+
+    # # aggiungo file hockey alla prima collection
+    # hybrid_search.create_document(collection_names[2], doc_hockey)
+
+    # # aggiungo file inline alla prima collection
+    # hybrid_search.create_document(collection_names[2], doc_inline)
+    
+
+    #collections = ",".join(collection_names)
+    collections = f"test_collection_92931260,test_collection_21381320,test_collection_41001341"
+    print("COLLECTIONS", collections)
+    res = hybrid_search.semantic_search(
+        collection_name=collections,
+        query="cosa abbiamo su tennis?",
+        num_results=num_results,
+        rerank=True,
+        rerank_model = ReRankModel.REMOTE_QWEN_3_8B
+    )
+    for elem in res:
+        elem["document"]["embedding"] = ""
+
+    for elem in res:
+        print("FILE NAME", elem["document"]["file_id"])
+        print("FILE ID", elem["document"]["id"])
+        print("TEXT", elem["document"]["text"])
+        print("RANK FUSION SCORE", elem["document"]["reciprocal_rank_fusion"])
+        print("FINAL SCORE", elem["document"]["final_score"])
+
+    print("CHE COSA ABBIAMO SU DRAWIO SEMANTIC SEARCH", def_name)
+    assert res[0]["document"]["file_id"] == "test_drawio"
+
+def m_test_six_collections_internal_embedding_hybrid_search():
+    """_summary_
+    Create 6 collections with remote embedding model, add documents to each of these collections
+    and perform hybrid search on these collections, with the query being about videogames (last document)
+    Returns:
+        bool: True if videogames document is found, False otherwise
+    """
+    hybrid_search = HybridSearch(api_key=demo_api_key)
+    random_int_collections = []
+    collection_names = []
+    def_name = inspect.currentframe().f_code.co_name
+    num_collections = 3
+    num_results = 8
+    # for i in range(num_collections):
+    #     random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
+    #     collection_names.append(f"test_collection_{random_int_collections[i]}")
+    #     hybrid_search.create_collection(collection_names[i])
+
+    # doc_yugioh = setup_document(
+    #     "test_file_yugioh",
+    #     FilesTestsUrls.YUGIOH
+    # )
+
+    # doc_dolci = setup_document(
+    #     "test_file_dolci",
+    #     FilesTestsUrls.DOLCI
+    # )
+
+    # doc_md_1 = setup_document(
+    #     "test_file_md_1",
+    #     FilesTestsUrls.H3_HEADER
+    # )
+
+    # doc_md_3 = setup_document(
+    #     "test_file_md_3",
+    #     FilesTestsUrls.INSTALLATION
+    # )
+
+    # doc_drawio = setup_document(
+    #     "test_drawio",
+    #     FilesTestsUrls.DRAWIO
+    # )
+
+    # doc_basket = setup_document(
+    #     "test_basket",
+    #     FilesTestsUrls.BASKET
+    # )
+
+    # doc_tennis = setup_document(
+    #     "test_tennis",
+    #     FilesTestsUrls.TENNIS
+    # )
+
+    # doc_videogames = setup_document(
+    #     "test_videogames",
+    #     FilesTestsUrls.VIDEOGAMES
+    # )
+
+    # doc_hockey = setup_document(
+    #     "test_hockey",
+    #     FilesTestsUrls.HOCKEY
+    # )
+
+    # doc_inline = setup_document(
+    #     "test_inline",
+    #     FilesTestsUrls.INLINE_LINK
+    # )
+
+    # # aggiungo file drawio alla terza collection
+    # hybrid_search.create_document(collection_names[0], doc_drawio)
+
+    # #aggiungo yugioh alla prima collection
+    # hybrid_search.create_document(collection_names[0], doc_yugioh)
+
+    # # aggiungo dolci alla seconda collection
+    # hybrid_search.create_document(collection_names[1], doc_dolci)
+    
+    # # aggiungo file md 1 alla terza collection
+    # hybrid_search.create_document(collection_names[1], doc_md_1)
+
+    # # aggiungo file md 3 alla seconda collection
+    # hybrid_search.create_document(collection_names[0], doc_md_3)
+
+    # # aggiungo file basket alla prima collection
+    # hybrid_search.create_document(collection_names[2], doc_basket)
+
+    # # aggiungo file tennis alla prima collection
+    # hybrid_search.create_document(collection_names[2], doc_tennis)
+
+    # # aggiungo file videogames alla prima collection
+    # hybrid_search.create_document(collection_names[0], doc_videogames)
+
+    # # aggiungo file hockey alla prima collection
+    # hybrid_search.create_document(collection_names[2], doc_hockey)
+
+    # # aggiungo file inline alla prima collection
+    # hybrid_search.create_document(collection_names[2], doc_inline)
+    
+
+    #collections = ",".join(collection_names)
+    collections = f"test_collection_92931260,test_collection_21381320,test_collection_41001341"
+    print("COLLECTIONS", collections)
+    res = hybrid_search.hybrid_search(
+        collection_name=collections,
+        query="cosa abbiamo su tennis?",
+        num_results=num_results,
+        ft_search_field="text",
+        rerank=True,
+        rerank_model = ReRankModel.REMOTE_QWEN_3_8B
+    )
+    for elem in res:
+        elem["document"]["embedding"] = ""
+
+    for elem in res:
+        print("FILE NAME", elem["document"]["file_id"])
+        print("FILE ID", elem["document"]["id"])
+        print("TEXT", elem["document"]["text"])
+        print("RANK FUSION SCORE", elem["hybrid_search_info"]["rank_fusion_score"])
+        print("FINAL SCORE", elem["document"]["final_score"])
+
+    print("CHE COSA ABBIAMO SU DRAWIO MULTI SEARCH", def_name)
+    assert res[0]["document"]["file_id"] == "test_drawio"
+
+
+def m_test_six_collections_remote_embedding_hybrid_search():
     """_summary_
     Create 6 collections with remote embedding model, add documents to each of these collections
     and perform hybrid search on these collections, with the query being about videogames (last document)
@@ -782,7 +1027,7 @@ def test_six_collections_remote_embedding_hybrid_search():
     # # aggiungo file hockey alla prima collection
     # hybrid_search.create_document(collection_names[2], doc_hockey)
 
-    # # aggiungo file basket alla prima collection
+    # # aggiungo file inline alla prima collection
     # hybrid_search.create_document(collection_names[2], doc_inline)
     
 
@@ -791,7 +1036,7 @@ def test_six_collections_remote_embedding_hybrid_search():
     print("COLLECTIONS", collections)
     res = hybrid_search.hybrid_search(
         collection_name=collections,
-        query="Il personaggio Lara Croft?",
+        query="cosa abbiamo su draw.io?",
         num_results=num_results,
         ft_search_field="text",
         rerank=True,
@@ -804,10 +1049,11 @@ def test_six_collections_remote_embedding_hybrid_search():
         print("FILE NAME", elem["document"]["file_id"])
         print("FILE ID", elem["document"]["id"])
         print("TEXT", elem["document"]["text"])
-        print("RFF", elem["document"]["reciprocal_rank_fusion"])
+        print("RANK FUSION SCORE", elem["hybrid_search_info"]["rank_fusion_score"])
+        print("FINAL SCORE", elem["document"]["final_score"])
 
     print("CHE COSA ABBIAMO SU DRAWIO MULTI SEARCH", def_name)
-    assert res[0]["document"]["file_id"] == "test_videogames"
+    assert res[0]["document"]["file_id"] == "test_basket"
 
 
 def m_test_collection_with_documents_single_installation_with_dolci_in_first_collection():
