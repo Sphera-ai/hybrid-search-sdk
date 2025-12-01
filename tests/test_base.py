@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import inspect
 from random import randint
 from time import time
 
@@ -27,6 +26,7 @@ This file contains the tests for the base class HybridSearch
 
 demo_api_key = "test"
 
+
 def test_init():
     """
     This function tests the __init__ function of the HybridSearch class
@@ -50,6 +50,7 @@ def test_invalid_key():
     except Exception as e:
         print(e)
         assert False
+
 
 def test_document_collection():
     """

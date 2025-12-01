@@ -165,6 +165,6 @@ cython_debug/
 
 *.tmp/
 
-*tests/*
+#*tests/*
 
 pdf/
