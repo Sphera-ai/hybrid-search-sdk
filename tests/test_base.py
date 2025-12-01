@@ -58,7 +58,7 @@ def test_document_collection():
     It assert that the object is created successfully without any exceptions
     """
 
-    random_int = randint(1, 10000)
+    random_int = randint(1000000, 100000000)
     hybrid_search = HybridSearch(api_key=demo_api_key)
     hybrid_search.create_collection(f"test_collection_{random_int}")
     c = hybrid_search.get_all_collections()
@@ -97,7 +97,7 @@ def test_custom_collection():
     It assert that the object is created successfully without any exceptions
     """
 
-    random_int = randint(1, 10000)
+    random_int = randint(1000000, 100000000)
     hybrid_search = HybridSearch(api_key=demo_api_key)
     schema = {
         "fields": [
@@ -191,7 +191,7 @@ def test_already_existing_cutom_collection():
     It assert that the object is created successfully without any exceptions
     """
 
-    random_int = randint(1, 10000)
+    random_int = randint(1000000, 100000000)
     hybrid_search = HybridSearch(api_key=demo_api_key)
     schema = {
         "fields": [
@@ -238,7 +238,7 @@ def test_already_existing_collection():
     It assert that the object is created successfully without any exceptions
     """
 
-    random_int = randint(1, 10000)
+    random_int = randint(1000000, 100000000)
     hybrid_search = HybridSearch(api_key=demo_api_key)
     hybrid_search.create_collection(f"test_collection_{random_int}")
     try:
@@ -261,7 +261,7 @@ def test_collection_not_existing():
     It assert that the object is created successfully without any exceptions
     """
 
-    random_int = randint(1, 10000)
+    random_int = randint(1000000, 100000000)
     hybrid_search = HybridSearch(api_key=demo_api_key)
     hybrid_search.create_collection(f"test_collection_{random_int}")
     try:
@@ -283,7 +283,7 @@ def test_filters():
     It assert that the object is created successfully without any exceptions
     """
 
-    random_int = randint(1, 10000)
+    random_int = randint(1000000, 100000000)
     hybrid_search = HybridSearch(api_key=demo_api_key)
     hybrid_search.create_collection(f"test_collection_{random_int}")
 
@@ -314,7 +314,7 @@ def test_semantic_chunks():
     It assert that the object is created successfully without any exceptions
     """
 
-    random_int = randint(1, 10000)
+    random_int = randint(1000000, 100000000)
     hybrid_search = HybridSearch(api_key=demo_api_key)
     hybrid_search.create_collection(
         f"test_collection_{random_int}", prev_next_chunks=True
@@ -358,7 +358,7 @@ def test_reranker():
     It assert that the object is created successfully without any exceptions
     """
 
-    random_int = randint(1, 10000)
+    random_int = randint(1000000, 100000000)
     hybrid_search = HybridSearch(api_key=demo_api_key)
     hybrid_search.create_collection(f"test_collection_{random_int}")
     c = hybrid_search.get_all_collections()
@@ -400,7 +400,7 @@ def test_remote_embedding():
     """
     This function tests the document_collection function of the HybridSearch class with a remote embedding model
     """
-    random_int = randint(1, 10000)
+    random_int = randint(1000000, 100000000)
     hybrid_search = HybridSearch(api_key=demo_api_key)
     hybrid_search.create_collection(
         f"test_collection_{random_int}", model_name=EmbeddingModel.REMOTE_QWEN_3_8B
