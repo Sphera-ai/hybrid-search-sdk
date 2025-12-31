@@ -435,3 +435,44 @@ def test_remote_embedding():
         collection["name"] == f"test_collection_{random_int}" for collection in c
     )
     assert not collection_present
+
+
+def test_num_results():
+    """
+    This function tests the num_results parameter of the hybrid_search function of the HybridSearch class
+    It assert that the number of results returned is equal to the num_results parameter
+    """
+
+    random_int = randint(1000000, 100000000)
+    hybrid_search = HybridSearch(api_key=demo_api_key)
+    hybrid_search.create_collection(f"test_collection_{random_int}")
+    c = hybrid_search.get_all_collections()
+    collection_present = any(
+        collection["name"] == f"test_collection_{random_int}" for collection in c
+    )
+    assert collection_present
+
+    doc = Document(
+        preprocessing=Preprocessing(),
+        default_fields=DocumentInformations(file_id="test_file"),
+        file="https://css4.pub/2015/textbook/somatosensory.pdf",
+        fields={},
+    )
+    hybrid_search.create_document(f"test_collection_{random_int}", doc)
+    num_results_requested = 2
+    res = hybrid_search.hybrid_search(
+        collection_name=f"test_collection_{random_int}",
+        query="sensory information in receptors",
+        num_results=num_results_requested,
+        ft_search_field="text",
+    )
+    assert res is not None
+    assert len(res) == num_results_requested
+
+    hybrid_search.delete_collection(f"test_collection_{random_int}")
+
+    c = hybrid_search.get_all_collections()
+    collection_present = any(
+        collection["name"] == f"test_collection_{random_int}" for collection in c
+    )
+    assert not collection_present

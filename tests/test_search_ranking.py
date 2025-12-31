@@ -213,7 +213,7 @@ def test_three_collections_mixed_embedding_semantic_search():
         )
     random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
     collection_names.append(
-        f"test_collection_{random_int_collections[num_collections-1]}"
+        f"test_collection_{random_int_collections[num_collections - 1]}"
     )
     hybrid_search.create_collection(
         collection_names[num_collections - 1],
@@ -411,36 +411,6 @@ def test_six_collections_mixed_embedding_hybrid_search():
     hybrid_search.create_document(collection_names[5], doc_videogames)
     hybrid_search.create_document(collection_names[2], doc_hockey)
     hybrid_search.create_document(collection_names[2], doc_inline)
-    hybrid_search.create_document(collection_names[0], doc_drawio)
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-    hybrid_search.create_document(collection_names[1], doc_dolci)
-    hybrid_search.create_document(collection_names[1], doc_md_1)
-    hybrid_search.create_document(collection_names[0], doc_md_3)
-    hybrid_search.create_document(collection_names[4], doc_basket)
-    hybrid_search.create_document(collection_names[2], doc_tennis)
-    hybrid_search.create_document(collection_names[5], doc_videogames)
-    hybrid_search.create_document(collection_names[2], doc_hockey)
-    hybrid_search.create_document(collection_names[2], doc_inline)
-    hybrid_search.create_document(collection_names[0], doc_drawio)
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-    hybrid_search.create_document(collection_names[1], doc_dolci)
-    hybrid_search.create_document(collection_names[1], doc_md_1)
-    hybrid_search.create_document(collection_names[0], doc_md_3)
-    hybrid_search.create_document(collection_names[4], doc_basket)
-    hybrid_search.create_document(collection_names[2], doc_tennis)
-    hybrid_search.create_document(collection_names[5], doc_videogames)
-    hybrid_search.create_document(collection_names[2], doc_hockey)
-    hybrid_search.create_document(collection_names[2], doc_inline)
-    hybrid_search.create_document(collection_names[0], doc_drawio)
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-    hybrid_search.create_document(collection_names[1], doc_dolci)
-    hybrid_search.create_document(collection_names[1], doc_md_1)
-    hybrid_search.create_document(collection_names[0], doc_md_3)
-    hybrid_search.create_document(collection_names[4], doc_basket)
-    hybrid_search.create_document(collection_names[2], doc_tennis)
-    hybrid_search.create_document(collection_names[5], doc_videogames)
-    hybrid_search.create_document(collection_names[2], doc_hockey)
-    hybrid_search.create_document(collection_names[2], doc_inline)
 
     collections = ",".join(collection_names)
     print("COLLECTIONS", collections)
@@ -498,36 +468,6 @@ def test_six_collections_mixed_embedding_semantic_search():
     doc_hockey = setup_document("test_hockey", FilesTestsUrls.HOCKEY)
     doc_inline = setup_document("test_inline", FilesTestsUrls.INLINE_LINK)
 
-    hybrid_search.create_document(collection_names[0], doc_drawio)
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-    hybrid_search.create_document(collection_names[1], doc_dolci)
-    hybrid_search.create_document(collection_names[1], doc_md_1)
-    hybrid_search.create_document(collection_names[0], doc_md_3)
-    hybrid_search.create_document(collection_names[4], doc_basket)
-    hybrid_search.create_document(collection_names[2], doc_tennis)
-    hybrid_search.create_document(collection_names[5], doc_videogames)
-    hybrid_search.create_document(collection_names[2], doc_hockey)
-    hybrid_search.create_document(collection_names[2], doc_inline)
-    hybrid_search.create_document(collection_names[0], doc_drawio)
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-    hybrid_search.create_document(collection_names[1], doc_dolci)
-    hybrid_search.create_document(collection_names[1], doc_md_1)
-    hybrid_search.create_document(collection_names[0], doc_md_3)
-    hybrid_search.create_document(collection_names[4], doc_basket)
-    hybrid_search.create_document(collection_names[2], doc_tennis)
-    hybrid_search.create_document(collection_names[5], doc_videogames)
-    hybrid_search.create_document(collection_names[2], doc_hockey)
-    hybrid_search.create_document(collection_names[2], doc_inline)
-    hybrid_search.create_document(collection_names[0], doc_drawio)
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-    hybrid_search.create_document(collection_names[1], doc_dolci)
-    hybrid_search.create_document(collection_names[1], doc_md_1)
-    hybrid_search.create_document(collection_names[0], doc_md_3)
-    hybrid_search.create_document(collection_names[4], doc_basket)
-    hybrid_search.create_document(collection_names[2], doc_tennis)
-    hybrid_search.create_document(collection_names[5], doc_videogames)
-    hybrid_search.create_document(collection_names[2], doc_hockey)
-    hybrid_search.create_document(collection_names[2], doc_inline)
     hybrid_search.create_document(collection_names[0], doc_drawio)
     hybrid_search.create_document(collection_names[0], doc_yugioh)
     hybrid_search.create_document(collection_names[1], doc_dolci)
@@ -633,7 +573,7 @@ def test_three_collections_mixed_embedding_hybrid_search_videogames():
         )
     random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
     collection_names.append(
-        f"test_collection_{random_int_collections[num_collections-1]}"
+        f"test_collection_{random_int_collections[num_collections - 1]}"
     )
     hybrid_search.create_collection(
         collection_names[num_collections - 1],

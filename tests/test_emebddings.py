@@ -81,6 +81,7 @@ def test_invalid_key():
         print(e)
         assert False
 
+
 def test_L12_V2_three_collections_remote_embedding_hybrid_search_basket():
     """_summary_
     Create 3 collections with internal embedding model, add documents to each of these collections
@@ -97,7 +98,9 @@ def test_L12_V2_three_collections_remote_embedding_hybrid_search_basket():
     for i in range(num_collections):
         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
         collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i],model_name=EmbeddingModel.REMOTE_QWEN_3_8B)
+        hybrid_search.create_collection(
+            collection_names[i], model_name=EmbeddingModel.REMOTE_QWEN_3_8B
+        )
 
     doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
 
@@ -139,6 +142,7 @@ def test_L12_V2_three_collections_remote_embedding_hybrid_search_basket():
     print("METHOD", def_name)
     assert res[0]["document"]["file_id"] == "test_basket"
 
+
 def test_L12_V2_three_collections_internal_embedding_hybrid_search_basket():
     """_summary_
     Create 3 collections with internal embedding model, add documents to each of these collections
@@ -155,7 +159,9 @@ def test_L12_V2_three_collections_internal_embedding_hybrid_search_basket():
     for i in range(num_collections):
         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
         collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i],model_name=EmbeddingModel.ALL_MINILM_L12_V2)
+        hybrid_search.create_collection(
+            collection_names[i], model_name=EmbeddingModel.ALL_MINILM_L12_V2
+        )
 
     doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
 
@@ -214,7 +220,9 @@ def test_Distilbert_three_collections_internal_embedding_hybrid_search_basket():
     for i in range(num_collections):
         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
         collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i],model_name=EmbeddingModel.DISTILBERT_BASE_UNCASED)
+        hybrid_search.create_collection(
+            collection_names[i], model_name=EmbeddingModel.DISTILBERT_BASE_UNCASED
+        )
 
     doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
 
@@ -256,6 +264,7 @@ def test_Distilbert_three_collections_internal_embedding_hybrid_search_basket():
     print("METHOD", def_name)
     assert res[0]["document"]["file_id"] == "test_basket"
 
+
 def test_DISTILUSE_three_collections_internal_embedding_hybrid_search_basket():
     """_summary_
     Create 3 collections with internal embedding model, add documents to each of these collections
@@ -272,7 +281,10 @@ def test_DISTILUSE_three_collections_internal_embedding_hybrid_search_basket():
     for i in range(num_collections):
         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
         collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i],model_name=EmbeddingModel.DISTILUSE_BASE_MULTILINGUAL_CASED_V2)
+        hybrid_search.create_collection(
+            collection_names[i],
+            model_name=EmbeddingModel.DISTILUSE_BASE_MULTILINGUAL_CASED_V2,
+        )
 
     doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
 
@@ -309,10 +321,11 @@ def test_DISTILUSE_three_collections_internal_embedding_hybrid_search_basket():
     for elem in res:
         print("FILE NAME", elem["document"]["file_id"])
         print("FILE ID", elem["document"]["id"])
-        #print("TEXT", elem["document"]["text"])
+        # print("TEXT", elem["document"]["text"])
 
     print("METHOD", def_name)
     assert res[0]["document"]["file_id"] == "test_basket"
+
 
 def test_E5_LARGE_three_collections_internal_embedding_hybrid_search_basket():
     """_summary_
@@ -330,7 +343,9 @@ def test_E5_LARGE_three_collections_internal_embedding_hybrid_search_basket():
     for i in range(num_collections):
         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
         collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i],model_name=EmbeddingModel.E5_LARGE)
+        hybrid_search.create_collection(
+            collection_names[i], model_name=EmbeddingModel.E5_LARGE
+        )
 
     doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
 
@@ -367,10 +382,11 @@ def test_E5_LARGE_three_collections_internal_embedding_hybrid_search_basket():
     for elem in res:
         print("FILE NAME", elem["document"]["file_id"])
         print("FILE ID", elem["document"]["id"])
-        #print("TEXT", elem["document"]["text"])
+        # print("TEXT", elem["document"]["text"])
 
     print("METHOD", def_name)
     assert res[0]["document"]["file_id"] == "test_basket"
+
 
 def test_E5LARGE_V2_three_collections_internal_embedding_hybrid_search_basket():
     """_summary_
@@ -388,7 +404,9 @@ def test_E5LARGE_V2_three_collections_internal_embedding_hybrid_search_basket():
     for i in range(num_collections):
         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
         collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i],model_name=EmbeddingModel.E5_LARGE_V2)
+        hybrid_search.create_collection(
+            collection_names[i], model_name=EmbeddingModel.E5_LARGE_V2
+        )
 
     doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
 
@@ -425,7 +443,7 @@ def test_E5LARGE_V2_three_collections_internal_embedding_hybrid_search_basket():
     for elem in res:
         print("FILE NAME", elem["document"]["file_id"])
         print("FILE ID", elem["document"]["id"])
-        #print("TEXT", elem["document"]["text"])
+        # print("TEXT", elem["document"]["text"])
 
     print("METHOD", def_name)
     assert res[0]["document"]["file_id"] == "test_basket"
@@ -447,7 +465,9 @@ def test_E5SMALL_three_collections_internal_embedding_hybrid_search_basket():
     for i in range(num_collections):
         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
         collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i],model_name=EmbeddingModel.E5_SMALL)
+        hybrid_search.create_collection(
+            collection_names[i], model_name=EmbeddingModel.E5_SMALL
+        )
 
     doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
 
@@ -484,7 +504,7 @@ def test_E5SMALL_three_collections_internal_embedding_hybrid_search_basket():
     for elem in res:
         print("FILE NAME", elem["document"]["file_id"])
         print("FILE ID", elem["document"]["id"])
-        #print("TEXT", elem["document"]["text"])
+        # print("TEXT", elem["document"]["text"])
 
     print("METHOD", def_name)
     assert res[0]["document"]["file_id"] == "test_basket"
@@ -506,7 +526,9 @@ def test_E5SMALL_V2_three_collections_internal_embedding_hybrid_search_basket():
     for i in range(num_collections):
         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
         collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i],model_name=EmbeddingModel.E5_SMALL_V2)
+        hybrid_search.create_collection(
+            collection_names[i], model_name=EmbeddingModel.E5_SMALL_V2
+        )
 
     doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
 
@@ -543,7 +565,7 @@ def test_E5SMALL_V2_three_collections_internal_embedding_hybrid_search_basket():
     for elem in res:
         print("FILE NAME", elem["document"]["file_id"])
         print("FILE ID", elem["document"]["id"])
-        #print("TEXT", elem["document"]["text"])
+        # print("TEXT", elem["document"]["text"])
 
     print("METHOD", def_name)
     assert res[0]["document"]["file_id"] == "test_basket"
@@ -565,7 +587,9 @@ def test_GTELARGE_three_collections_internal_embedding_hybrid_search_basket():
     for i in range(num_collections):
         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
         collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i],model_name=EmbeddingModel.GTE_LARGE)
+        hybrid_search.create_collection(
+            collection_names[i], model_name=EmbeddingModel.GTE_LARGE
+        )
 
     doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
 
@@ -602,10 +626,11 @@ def test_GTELARGE_three_collections_internal_embedding_hybrid_search_basket():
     for elem in res:
         print("FILE NAME", elem["document"]["file_id"])
         print("FILE ID", elem["document"]["id"])
-        #print("TEXT", elem["document"]["text"])
+        # print("TEXT", elem["document"]["text"])
 
     print("METHOD", def_name)
     assert res[0]["document"]["file_id"] == "test_basket"
+
 
 def test_GTESMALL_three_collections_internal_embedding_hybrid_search_basket():
     """_summary_
@@ -623,7 +648,9 @@ def test_GTESMALL_three_collections_internal_embedding_hybrid_search_basket():
     for i in range(num_collections):
         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
         collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i],model_name=EmbeddingModel.GTE_SMALL)
+        hybrid_search.create_collection(
+            collection_names[i], model_name=EmbeddingModel.GTE_SMALL
+        )
 
     doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
 
@@ -660,7 +687,7 @@ def test_GTESMALL_three_collections_internal_embedding_hybrid_search_basket():
     for elem in res:
         print("FILE NAME", elem["document"]["file_id"])
         print("FILE ID", elem["document"]["id"])
-        #print("TEXT", elem["document"]["text"])
+        # print("TEXT", elem["document"]["text"])
 
     print("METHOD", def_name)
     assert res[0]["document"]["file_id"] == "test_basket"
@@ -682,7 +709,9 @@ def test_JINA_three_collections_internal_embedding_hybrid_search_basket():
     for i in range(num_collections):
         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
         collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i],model_name=EmbeddingModel.JINA_EMBEDDINGS_V2_BASE_EN)
+        hybrid_search.create_collection(
+            collection_names[i], model_name=EmbeddingModel.JINA_EMBEDDINGS_V2_BASE_EN
+        )
 
     doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
 
@@ -719,10 +748,11 @@ def test_JINA_three_collections_internal_embedding_hybrid_search_basket():
     for elem in res:
         print("FILE NAME", elem["document"]["file_id"])
         print("FILE ID", elem["document"]["id"])
-        #print("TEXT", elem["document"]["text"])
+        # print("TEXT", elem["document"]["text"])
 
     print("METHOD", def_name)
     assert res[0]["document"]["file_id"] == "test_basket"
+
 
 def test_MULILINGUAL_three_collections_internal_embedding_hybrid_search_basket():
     """_summary_
@@ -740,7 +770,9 @@ def test_MULILINGUAL_three_collections_internal_embedding_hybrid_search_basket()
     for i in range(num_collections):
         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
         collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i],model_name=EmbeddingModel.MULTILINGUAL_E5_LARGE)
+        hybrid_search.create_collection(
+            collection_names[i], model_name=EmbeddingModel.MULTILINGUAL_E5_LARGE
+        )
 
     doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
 
