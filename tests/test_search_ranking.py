@@ -213,7 +213,7 @@ def test_three_collections_mixed_embedding_semantic_search():
         )
     random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
     collection_names.append(
-        f"test_collection_{random_int_collections[num_collections-1]}"
+        f"test_collection_{random_int_collections[num_collections - 1]}"
     )
     hybrid_search.create_collection(
         collection_names[num_collections - 1],
@@ -574,7 +574,7 @@ def test_three_collections_mixed_embedding_hybrid_search_videogames():
         )
     random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
     collection_names.append(
-        f"test_collection_{random_int_collections[num_collections-1]}"
+        f"test_collection_{random_int_collections[num_collections - 1]}"
     )
     hybrid_search.create_collection(
         collection_names[num_collections - 1],
