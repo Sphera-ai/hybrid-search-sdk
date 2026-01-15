@@ -33,8 +33,11 @@ class FilesTestsUrls(StrEnum):
     INLINE_LINK = (
         "https://raw.githubusercontent.com/mxstbr/markdown-test-file/master/TEST.md"
     )
+    # INSTALLATION = (
+    #     "https://github.com/othneildrew/Best-README-Template/blob/main/README.md"
+    # )
     INSTALLATION = (
-        "https://github.com/othneildrew/Best-README-Template/blob/main/README.md"
+        "https://raw.githubusercontent.com/othneildrew/Best-README-Template/refs/heads/main/README.md"
     )
     DRAWIO = "https://cidoc-crm.org/sites/default/files/Draw.io%20to%20Triples.pdf"
     HOCKEY = "https://www.mobilesport.ch/assets/lbwp-cdn/mobilesport/files/1713775893/mobilesport-hockey-su-ghiaccio-giovani--forme-di-allenamento-relative-alle-forme-caratteristiche.pdf"
@@ -80,6 +83,54 @@ def test_invalid_key():
     except Exception as e:
         print(e)
         assert False
+
+# def test_md_internal_embedding_semantic_search():
+#     """_summary_
+#     Create 3 collections with internal embedding model, add documents to each of these collections
+#     and perform semantic search on these collections, with the query being about tennis
+#     Returns:
+#         bool: True if tennis document is found, False otherwise
+#     """
+#     hybrid_search = HybridSearch(api_key=demo_api_key)
+#     random_int_collections = []
+#     collection_names = []
+#     def_name = inspect.currentframe().f_code.co_name
+#     num_collections = 3
+#     num_results = 8
+#     for i in range(num_collections):
+#         random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
+#         collection_names.append(f"test_collection_{random_int_collections[i]}")
+#         hybrid_search.create_collection(collection_names[i])
+
+
+#     #doc_md_3 = setup_document("test_file_md_3", FilesTestsUrls.INSTALLATION)
+#     doc_md_3 = setup_document("test_file_md_3", FilesTestsUrls.INSTALLATION_BUONA)
+
+#     hybrid_search.create_document(collection_names[0], doc_md_3)
+#     hybrid_search.create_document(collection_names[1], doc_md_3)
+#     hybrid_search.create_document(collection_names[2], doc_md_3)
+#     hybrid_search.create_document(collection_names[0], doc_md_3)
+#     hybrid_search.create_document(collection_names[0], doc_md_3)
+#     hybrid_search.create_document(collection_names[2], doc_md_3)
+#     hybrid_search.create_document(collection_names[0], doc_md_3)
+#     hybrid_search.create_document(collection_names[0], doc_md_3)
+#     hybrid_search.create_document(collection_names[1], doc_md_3)
+#     hybrid_search.create_document(collection_names[0], doc_md_3)
+#     hybrid_search.create_document(collection_names[0], doc_md_3)
+
+
+#     collections = ",".join(collection_names)
+#     print("COLLECTIONS", collections)
+#     res = hybrid_search.semantic_search(
+#         collection_name=collections,
+#         query="cosa abbiamo su tennis?",
+#         num_results=num_results,
+#         rerank=True,
+#         rerank_model=ReRankModel.REMOTE_QWEN_3_8B,
+#     )
+
+#     print("METHOD", def_name)
+#     assert res[0]["document"]["file_id"] == "test_file_md_3"
 
 
 def test_three_collections_internal_embedding_semantic_search():

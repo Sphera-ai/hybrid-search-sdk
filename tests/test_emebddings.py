@@ -34,13 +34,12 @@ class FilesTestsUrls(StrEnum):
         "https://raw.githubusercontent.com/mxstbr/markdown-test-file/master/TEST.md"
     )
     INSTALLATION = (
-        "https://github.com/othneildrew/Best-README-Template/blob/main/README.md"
+        "https://raw.githubusercontent.com/othneildrew/Best-README-Template/refs/heads/main/README.md"
     )
     DRAWIO = "https://cidoc-crm.org/sites/default/files/Draw.io%20to%20Triples.pdf"
     HOCKEY = "https://www.mobilesport.ch/assets/lbwp-cdn/mobilesport/files/1713775893/mobilesport-hockey-su-ghiaccio-giovani--forme-di-allenamento-relative-alle-forme-caratteristiche.pdf"
     TENNIS = "https://www.sergvese.it/smba/files/tennis.pdf"
     VIDEOGAMES = "https://www.chateaudeprangins.ch/chateaudeprangins/medias/games/la-storia-dei-videogiochi-2021_it.pdf"
-
 
 def setup_document(input_file_id, input_file):
     """_summary_
@@ -114,6 +113,7 @@ def test_L12_V2_three_collections_remote_embedding_hybrid_search_basket():
 
     doc_basket = setup_document("test_basket", FilesTestsUrls.BASKET)
 
+
     hybrid_search.create_document(collection_names[0], doc_drawio)
     hybrid_search.create_document(collection_names[0], doc_yugioh)
     hybrid_search.create_document(collection_names[1], doc_dolci)
@@ -141,6 +141,7 @@ def test_L12_V2_three_collections_remote_embedding_hybrid_search_basket():
 
     print("METHOD", def_name)
     assert res[0]["document"]["file_id"] == "test_basket"
+    
 
 
 def test_L12_V2_three_collections_internal_embedding_hybrid_search_basket():
