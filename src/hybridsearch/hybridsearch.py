@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from asyncio.log import logger
+import logging
 
 import requests as req  # type: ignore
 
@@ -12,6 +12,23 @@ from .exceptions import (
     ServerError,
 )
 from .models import Document, EmbeddingModel, Entry, Filter, ReRankModel
+
+logger = logging.getLogger(__name__)
+
+# Shared session with connection pooling and a default timeout: requests has
+# NO default timeout, so a hung server would block the client forever. The
+# default is generous because create-document can legitimately take minutes
+# (chunking + embedding + indexing of large files).
+DEFAULT_TIMEOUT_SECONDS = 500.0
+
+
+class _TimeoutSession(req.Session):
+    def request(self, method, url, **kwargs):  # type: ignore[override]
+        kwargs.setdefault("timeout", DEFAULT_TIMEOUT_SECONDS)
+        return super().request(method, url, **kwargs)
+
+
+session: req.Session = _TimeoutSession()
 
 
 class HybridSearch:
@@ -33,7 +50,7 @@ class HybridSearch:
         This function checks if the API key is valid.
         Returns true if the API key is valid.
         """
-        status_code = req.get(
+        status_code = session.get(
             f"{self.url}:{self.port}/api-key",
             headers={"x-typesense-api-key": self.api_key},
         ).status_code
@@ -81,7 +98,7 @@ class HybridSearch:
             json: response of the created collection
         """
 
-        response = req.post(
+        response = session.post(
             f"{self.url}:{self.port}/create-collection-custom",
             headers={"x-typesense-api-key": self.api_key},
             params={
@@ -155,7 +172,7 @@ class HybridSearch:
         Raises:
 
         """
-        response = req.post(
+        response = session.post(
             f"{self.url}:{self.port}/create-collection",
             headers={"x-typesense-api-key": self.api_key},
             params={
@@ -198,7 +215,7 @@ class HybridSearch:
             CollectionNotFound: If the collection is not founda
             InvalidApiKey: If the API key is invalid
         """
-        response = req.get(
+        response = session.get(
             f"{self.url}:{self.port}/collections/{collection_name}",
             headers={"x-typesense-api-key": self.api_key},
         )
@@ -225,7 +242,7 @@ class HybridSearch:
             CollectionNotFound: If the collection is not found
             InvalidApiKey: If the API key
         """
-        response = req.get(
+        response = session.get(
             f"{self.url}:{self.port}/collections",
             headers={"x-typesense-api-key": self.api_key},
         )
@@ -256,7 +273,7 @@ class HybridSearch:
             json: response
         """
 
-        response = req.post(
+        response = session.post(
             f"{self.url}:{self.port}/create-document",
             headers={"x-typesense-api-key": self.api_key},
             params={"collection_name": collection_name},
@@ -292,7 +309,7 @@ class HybridSearch:
         Returns:
             json: response
         """
-        response = req.post(
+        response = session.post(
             f"{self.url}:{self.port}/create-entry",
             headers={"x-typesense-api-key": self.api_key},
             params={"collection_name": collection_name},
@@ -327,7 +344,7 @@ class HybridSearch:
         Returns:
             json: response
         """
-        response = req.delete(
+        response = session.delete(
             f"{self.url}:{self.port}/collections-delete/{collection_name}",
             headers={"x-typesense-api-key": self.api_key},
         )
@@ -363,7 +380,7 @@ class HybridSearch:
         Returns:
             json: response
         """
-        response = req.delete(
+        response = session.delete(
             f"{self.url}:{self.port}/delete-documents",
             headers={"x-typesense-api-key": self.api_key},
             params={
@@ -408,7 +425,7 @@ class HybridSearch:
         Returns:
             json: response
         """
-        response = req.delete(
+        response = session.delete(
             f"{self.url}:{self.port}/delete-entries",
             headers={"x-typesense-api-key": self.api_key},
             params={
@@ -460,7 +477,7 @@ class HybridSearch:
             json: response
         """
         if filters is None or len(filters) == 0:
-            response = req.post(
+            response = session.post(
                 f"{self.url}:{self.port}/collections-semanticsearch",
                 headers={"x-typesense-api-key": self.api_key},
                 params={
@@ -472,7 +489,7 @@ class HybridSearch:
                 },
             )
         else:
-            response = req.post(
+            response = session.post(
                 f"{self.url}:{self.port}/collections-semanticsearch",
                 headers={"x-typesense-api-key": self.api_key},
                 params={
@@ -530,7 +547,7 @@ class HybridSearch:
             response: json
         """
         if filters is None or len(filters) == 0:
-            response = req.post(
+            response = session.post(
                 f"{self.url}:{self.port}/collections-hybridsearch",
                 headers={"x-typesense-api-key": self.api_key},
                 params={
@@ -543,7 +560,7 @@ class HybridSearch:
                 },
             )
         else:
-            response = req.post(
+            response = session.post(
                 f"{self.url}:{self.port}/collections-hybridsearch",
                 headers={"x-typesense-api-key": self.api_key},
                 params={
@@ -582,7 +599,7 @@ class HybridSearch:
         Returns:
             response: json with a list of the models used for embedding.
         """
-        response = req.get(
+        response = session.get(
             f"{self.url}:{self.port}/embedding_models",
             headers={"x-typesense-api-key": self.api_key},
         )
@@ -604,7 +621,7 @@ class HybridSearch:
         Returns:
             response: json with a list of the models used for embedding
         """
-        response = req.get(
+        response = session.get(
             f"{self.url}:{self.port}/rerank_models",
             headers={"x-typesense-api-key": self.api_key},
         )
@@ -626,7 +643,7 @@ class HybridSearch:
         Returns:
             response: json with a list of the supported document formats
         """
-        response = req.get(
+        response = session.get(
             f"{self.url}:{self.port}/supported_documents",
             headers={"x-typesense-api-key": self.api_key},
         )
