@@ -3,11 +3,12 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, conset, field_validator
+from pydantic import BaseModel, conset
 
 
 class ChunkMod(str, Enum):
     NAIVE = "naive"
+    SENTENCE = "sentence"
     SEMANTIC = "semantic"
 
     class Config:
@@ -42,7 +43,6 @@ remote_embedding_models = {
 
 
 class ReRankModel(Enum):
-    # JINA_RERANK_V2 = "jina-rerank-v2"
     BGE_RERANKER_LARGE = "bge-m3-Rerank"
     MXBAI_RERANKER_LARGE = "mxbai-rerank-large-V1"
     GTE_MULTILINGUAL_RERANKER_BASE = "gte-multilingual-reranker-base"
@@ -50,7 +50,7 @@ class ReRankModel(Enum):
 
 
 class Preprocessing(BaseModel):
-    chunk_mode: ChunkMod = ChunkMod.NAIVE
+    chunk_mode: ChunkMod = ChunkMod.SENTENCE
     chunk_size: int = 100
     overlap_size: int = 20
     semantic_chunk_model: str = (
@@ -204,9 +204,3 @@ class Filter(BaseModel):
     field: str
     operator: Operator
     value: Any
-
-    @field_validator("operator")
-    def check_operator(cls, v):
-        if v not in Operator.__members__.values():
-            raise ValueError("Invalid operator")
-        return v

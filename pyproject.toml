@@ -1,11 +1,11 @@
 [project]
 name = "hybrid_search"
-version = "0.4.4"
+version = "0.4.5"
 description = "Library for hybrid-search"
 readme = "README.md"
 maintainers = [{ name = "Luca Angioloni", email = "luca.angioloni@aidia.it" }]
 authors = [{ name = "Luca Angioloni", email = "luca.angioloni@aidia.it" }]
-requires-python = ">=3"
+requires-python = ">=3.8"
 classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
@@ -13,6 +13,10 @@ classifiers = [
 ]
 
 dependencies = ["requests", "pydantic"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
 
 [project.optional-dependencies]
 coverage = ["covdefaults>=2.1", "coverage"]
