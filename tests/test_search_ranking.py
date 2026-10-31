@@ -1,60 +1,34 @@
 from __future__ import annotations
 
-import inspect
-from enum import StrEnum
-from random import randint
-
+import pytest
 from hybridsearch import (
     Document,
     DocumentInformations,
     EmbeddingModel,
+    Filter,
     HybridSearch,
+    Operator,
     Preprocessing,
     ReRankModel,
 )
-from hybridsearch.exceptions import InvalidApiKey
+from hybridsearch.exceptions import InvalidRequest
+
+from tests.demo_docs import DEMO_DOCS, ingest_documents
 
 """
-This file contains the tests for the hybrid seach and semantic search of class HybridSearch
+Integration tests for the hybrid search and semantic search endpoints of the
+microservice, focused on cross-collection ranking.
+
+Requires a running microservice (hybrid-search/docker-compose.yaml) and
+network access to fetch the demo documents. Most tests rerank with the local
+BGE-m3 reranker (standard architecture, no trust_remote_code) because the GTE
+and mxbai rerankers (Alibaba new_impl code) crash intermittently on CPU with
+transformers 5.x; the remote rerank path is covered explicitly by
+test_three_collections_internal_embedding_remote_reranker (needs a valid
+FIREWORKS_APIKEY) and test_base.py::test_remote_embedding.
 """
 
 demo_api_key = "test"
-
-
-class FilesTestsUrls(StrEnum):
-    """_summary_
-    File urls to be used in the tests
-    """
-
-    YUGIOH = "https://img.konami.com/yugioh/worldchampionship/2025/data/limitregulation-tcg.pdf"
-    BASKET = "https://www.itaerferrarin.edu.it/pasw4/didattica/pallacanestro.pdf"
-    DOLCI = "https://comune.ravenna.it/wp-content/uploads/2025/09/Ricettario-per-dolci-momenti-insieme.pdf"
-    H3_HEADER = "https://gist.github.com/rt2zz/e0a1d6ab2682d2c47746950b84c0b6ee#file-markdown-sample-md"
-    INLINE_LINK = (
-        "https://raw.githubusercontent.com/mxstbr/markdown-test-file/master/TEST.md"
-    )
-    INSTALLATION = (
-        "https://github.com/othneildrew/Best-README-Template/blob/main/README.md"
-    )
-    DRAWIO = "https://cidoc-crm.org/sites/default/files/Draw.io%20to%20Triples.pdf"
-    HOCKEY = "https://www.mobilesport.ch/assets/lbwp-cdn/mobilesport/files/1713775893/mobilesport-hockey-su-ghiaccio-giovani--forme-di-allenamento-relative-alle-forme-caratteristiche.pdf"
-    TENNIS = "https://www.sergvese.it/smba/files/tennis.pdf"
-    VIDEOGAMES = "https://www.chateaudeprangins.ch/chateaudeprangins/medias/games/la-storia-dei-videogiochi-2021_it.pdf"
-
-
-def setup_document(input_file_id, input_file):
-    """_summary_
-    Setup Document instance for create_document method
-
-    Returns:
-        Document: Document instance
-    """
-    return Document(
-        preprocessing=Preprocessing(),
-        default_fields=DocumentInformations(file_id=input_file_id),
-        file=input_file,
-        fields={},
-    )
 
 
 def test_init():
@@ -69,550 +43,461 @@ def test_init():
 
 def test_invalid_key():
     """
-    This function tests the __init__ function of the HybridSearch class
-    It assert that the object is created successfully without any exceptions
+    The service must reject an invalid API key and accept the valid one
     """
 
-    try:
-        HybridSearch(api_key="invalid")
-    except InvalidApiKey:
-        assert True
-    except Exception as e:
-        print(e)
-        assert False
+    assert not HybridSearch(api_key="invalid").check_api_key()
+    assert HybridSearch(api_key=demo_api_key).check_api_key()
 
 
-def test_three_collections_internal_embedding_semantic_search():
-    """_summary_
-    Create 3 collections with internal embedding model, add documents to each of these collections
-    and perform semantic search on these collections, with the query being about tennis
-    Returns:
-        bool: True if tennis document is found, False otherwise
+def test_three_collections_internal_embedding_semantic_search(collection_factory, hs):
     """
-    hybrid_search = HybridSearch(api_key=demo_api_key)
-    random_int_collections = []
-    collection_names = []
-    def_name = inspect.currentframe().f_code.co_name
-    num_collections = 3
+    Create 3 collections with internal embedding model, add documents to each
+    of these collections and perform semantic search on these collections,
+    with the query being about tennis
+    """
     num_results = 8
-    for i in range(num_collections):
-        random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
-        collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i])
+    collection_names = [collection_factory() for _ in range(3)]
 
-    doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
-    doc_dolci = setup_document("test_file_dolci", FilesTestsUrls.DOLCI)
-    doc_md_1 = setup_document("test_file_md_1", FilesTestsUrls.H3_HEADER)
-    doc_md_3 = setup_document("test_file_md_3", FilesTestsUrls.INSTALLATION)
-    doc_drawio = setup_document("test_drawio", FilesTestsUrls.DRAWIO)
-    doc_basket = setup_document("test_basket", FilesTestsUrls.BASKET)
-    doc_tennis = setup_document("test_tennis", FilesTestsUrls.TENNIS)
-    doc_videogames = setup_document("test_videogames", FilesTestsUrls.VIDEOGAMES)
-    doc_hockey = setup_document("test_hockey", FilesTestsUrls.HOCKEY)
-    doc_inline = setup_document("test_inline", FilesTestsUrls.INLINE_LINK)
+    ingest_documents(
+        hs,
+        collection_names[0],
+        ["test_drawio", "test_file_yugioh", "test_file_md_3", "test_videogames"],
+    )
+    ingest_documents(hs, collection_names[1], ["test_file_dolci", "test_file_md_1"])
+    ingest_documents(
+        hs,
+        collection_names[2],
+        ["test_basket", "test_tennis", "test_hockey", "test_inline"],
+    )
 
-    hybrid_search.create_document(collection_names[0], doc_drawio)
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-    hybrid_search.create_document(collection_names[1], doc_dolci)
-    hybrid_search.create_document(collection_names[1], doc_md_1)
-    hybrid_search.create_document(collection_names[0], doc_md_3)
-    hybrid_search.create_document(collection_names[2], doc_basket)
-    hybrid_search.create_document(collection_names[2], doc_tennis)
-    hybrid_search.create_document(collection_names[0], doc_videogames)
-    hybrid_search.create_document(collection_names[2], doc_hockey)
-    hybrid_search.create_document(collection_names[2], doc_inline)
-
-    collections = ",".join(collection_names)
-    print("COLLECTIONS", collections)
-    res = hybrid_search.semantic_search(
-        collection_name=collections,
+    res = hs.semantic_search(
+        collection_name=",".join(collection_names),
         query="cosa abbiamo su tennis?",
         num_results=num_results,
         rerank=True,
-        rerank_model=ReRankModel.REMOTE_QWEN_3_8B,
+        rerank_model=ReRankModel.BGE_RERANKER_LARGE,
     )
 
-    print("METHOD", def_name)
     assert res[0]["document"]["file_id"] == "test_tennis"
 
 
-def test_three_collections_remote_embedding_semantic_search():
-    """_summary_
-    Create 3 collections with internal embedding model, add documents to each of these collections
-    and perform semantic search on these collections, with the query being about tennis
-    Returns:
-        bool: True if tennis document is found, False otherwise
+def test_three_collections_remote_embedding_semantic_search(collection_factory, hs):
     """
-    hybrid_search = HybridSearch(api_key=demo_api_key)
-    random_int_collections = []
-    collection_names = []
-    def_name = inspect.currentframe().f_code.co_name
-    num_collections = 3
+    Create 3 collections with remote embedding model, add documents to each
+    of these collections and perform semantic search on these collections,
+    with the query being about tennis
+    """
     num_results = 8
-    for i in range(num_collections):
-        random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
-        collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(
-            collection_names[i], model_name=EmbeddingModel.REMOTE_QWEN_3_8B
-        )
+    collection_names = [
+        collection_factory(model_name=EmbeddingModel.REMOTE_QWEN_3_8B) for _ in range(3)
+    ]
 
-    doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
-    doc_dolci = setup_document("test_file_dolci", FilesTestsUrls.DOLCI)
-    doc_md_1 = setup_document("test_file_md_1", FilesTestsUrls.H3_HEADER)
-    doc_md_3 = setup_document("test_file_md_3", FilesTestsUrls.INSTALLATION)
-    doc_drawio = setup_document("test_drawio", FilesTestsUrls.DRAWIO)
-    doc_basket = setup_document("test_basket", FilesTestsUrls.BASKET)
-    doc_tennis = setup_document("test_tennis", FilesTestsUrls.TENNIS)
-    doc_videogames = setup_document("test_videogames", FilesTestsUrls.VIDEOGAMES)
-    doc_hockey = setup_document("test_hockey", FilesTestsUrls.HOCKEY)
-    doc_inline = setup_document("test_inline", FilesTestsUrls.INLINE_LINK)
+    ingest_documents(
+        hs,
+        collection_names[0],
+        ["test_drawio", "test_file_yugioh", "test_file_md_3", "test_videogames"],
+    )
+    ingest_documents(hs, collection_names[1], ["test_file_dolci", "test_file_md_1"])
+    ingest_documents(
+        hs,
+        collection_names[2],
+        ["test_basket", "test_tennis", "test_hockey", "test_inline"],
+    )
 
-    hybrid_search.create_document(collection_names[0], doc_drawio)
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-    hybrid_search.create_document(collection_names[1], doc_dolci)
-    hybrid_search.create_document(collection_names[1], doc_md_1)
-    hybrid_search.create_document(collection_names[0], doc_md_3)
-    hybrid_search.create_document(collection_names[2], doc_basket)
-    hybrid_search.create_document(collection_names[2], doc_tennis)
-    hybrid_search.create_document(collection_names[0], doc_videogames)
-    hybrid_search.create_document(collection_names[2], doc_hockey)
-    hybrid_search.create_document(collection_names[2], doc_inline)
-
-    collections = ",".join(collection_names)
-    print("COLLECTIONS", collections)
-    res = hybrid_search.semantic_search(
-        collection_name=collections,
+    res = hs.semantic_search(
+        collection_name=",".join(collection_names),
         query="cosa abbiamo su tennis?",
         num_results=num_results,
         rerank=True,
-        rerank_model=ReRankModel.REMOTE_QWEN_3_8B,
+        rerank_model=ReRankModel.BGE_RERANKER_LARGE,
     )
 
-    print("METHOD", def_name)
     assert res[0]["document"]["file_id"] == "test_tennis"
 
 
-def test_three_collections_mixed_embedding_semantic_search():
-    """_summary_
-    Create 3 collections with internal embedding model, add documents to each of these collections
-    and perform semantic search on these collections, with the query being about tennis
-    Returns:
-        bool: True if tennis document is found, False otherwise
+def test_three_collections_mixed_embedding_semantic_search(collection_factory, hs):
     """
-    hybrid_search = HybridSearch(api_key=demo_api_key)
-    random_int_collections = []
-    collection_names = []
-    def_name = inspect.currentframe().f_code.co_name
-    num_collections = 3
+    Create 2 collections with remote embedding model and 1 with internal
+    embedding model, add documents to each of these collections and perform
+    semantic search on these collections, with the query being about tennis
+    """
     num_results = 8
-    for i in range(num_collections - 1):
-        random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
-        collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(
-            collection_names[i], model_name=EmbeddingModel.REMOTE_QWEN_3_8B
-        )
-    random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
-    collection_names.append(
-        f"test_collection_{random_int_collections[num_collections - 1]}"
+    collection_names = [
+        collection_factory(model_name=EmbeddingModel.REMOTE_QWEN_3_8B) for _ in range(2)
+    ]
+    collection_names.append(collection_factory())
+
+    ingest_documents(
+        hs,
+        collection_names[0],
+        ["test_drawio", "test_file_yugioh", "test_file_md_3", "test_videogames"],
     )
-    hybrid_search.create_collection(
-        collection_names[num_collections - 1],
-        model_name=EmbeddingModel.MULTILINGUAL_E5_SMALL,
+    ingest_documents(hs, collection_names[1], ["test_file_dolci", "test_file_md_1"])
+    ingest_documents(
+        hs,
+        collection_names[2],
+        ["test_basket", "test_tennis", "test_hockey", "test_inline"],
     )
 
-    doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
-    doc_dolci = setup_document("test_file_dolci", FilesTestsUrls.DOLCI)
-    doc_md_1 = setup_document("test_file_md_1", FilesTestsUrls.H3_HEADER)
-    doc_md_3 = setup_document("test_file_md_3", FilesTestsUrls.INSTALLATION)
-    doc_drawio = setup_document("test_drawio", FilesTestsUrls.DRAWIO)
-    doc_basket = setup_document("test_basket", FilesTestsUrls.BASKET)
-    doc_tennis = setup_document("test_tennis", FilesTestsUrls.TENNIS)
-    doc_videogames = setup_document("test_videogames", FilesTestsUrls.VIDEOGAMES)
-    doc_hockey = setup_document("test_hockey", FilesTestsUrls.HOCKEY)
-    doc_inline = setup_document("test_inline", FilesTestsUrls.INLINE_LINK)
-
-    hybrid_search.create_document(collection_names[0], doc_drawio)
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-    hybrid_search.create_document(collection_names[1], doc_dolci)
-    hybrid_search.create_document(collection_names[1], doc_md_1)
-    hybrid_search.create_document(collection_names[0], doc_md_3)
-    hybrid_search.create_document(collection_names[2], doc_basket)
-    hybrid_search.create_document(collection_names[2], doc_tennis)
-    hybrid_search.create_document(collection_names[0], doc_videogames)
-    hybrid_search.create_document(collection_names[2], doc_hockey)
-    hybrid_search.create_document(collection_names[2], doc_inline)
-
-    collections = ",".join(collection_names)
-    print("COLLECTIONS", collections)
-    res = hybrid_search.semantic_search(
-        collection_name=collections,
+    res = hs.semantic_search(
+        collection_name=",".join(collection_names),
         query="cosa abbiamo su tennis?",
         num_results=num_results,
         rerank=True,
-        rerank_model=ReRankModel.REMOTE_QWEN_3_8B,
+        rerank_model=ReRankModel.BGE_RERANKER_LARGE,
     )
 
-    print("METHOD", def_name)
     assert res[0]["document"]["file_id"] == "test_tennis"
 
 
-def test_three_collections_internal_embedding_hybrid_search_basket():
-    """_summary_
-    Create 3 collections with internal embedding model, add documents to each of these collections
-    and perform hybrid search on these collections, with the query being about basket
-    Returns:
-        bool: True if basket document is found, False otherwise
+def test_three_collections_internal_embedding_hybrid_search_basket(
+    collection_factory, hs
+):
     """
-    hybrid_search = HybridSearch(api_key=demo_api_key)
-    random_int_collections = []
-    collection_names = []
-    def_name = inspect.currentframe().f_code.co_name
-    num_collections = 3
+    Create 3 collections with internal embedding model, add documents to each
+    of these collections and perform hybrid search on these collections, with
+    the query being about basket
+    """
     num_results = 8
-    for i in range(num_collections):
-        random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
-        collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(collection_names[i])
+    collection_names = [collection_factory() for _ in range(3)]
 
-    doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
-    doc_dolci = setup_document("test_file_dolci", FilesTestsUrls.DOLCI)
-    doc_md_1 = setup_document("test_file_md_1", FilesTestsUrls.H3_HEADER)
-    doc_md_3 = setup_document("test_file_md_3", FilesTestsUrls.INSTALLATION)
-    doc_drawio = setup_document("test_drawio", FilesTestsUrls.DRAWIO)
-    doc_basket = setup_document("test_basket", FilesTestsUrls.BASKET)
+    ingest_documents(
+        hs, collection_names[0], ["test_drawio", "test_file_yugioh", "test_file_md_3"]
+    )
+    ingest_documents(hs, collection_names[1], ["test_file_dolci", "test_file_md_1"])
+    ingest_documents(hs, collection_names[2], ["test_basket"])
 
-    hybrid_search.create_document(collection_names[0], doc_drawio)
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-    hybrid_search.create_document(collection_names[1], doc_dolci)
-    hybrid_search.create_document(collection_names[1], doc_md_1)
-    hybrid_search.create_document(collection_names[0], doc_md_3)
-    hybrid_search.create_document(collection_names[2], doc_basket)
-
-    collections = ",".join(collection_names)
-    print("COLLECTIONS", collections)
-    res = hybrid_search.hybrid_search(
-        collection_name=collections,
+    res = hs.hybrid_search(
+        collection_name=",".join(collection_names),
         query="cosa abbiamo sul basekt?",
         num_results=num_results,
         ft_search_field="text",
         rerank=True,
-        rerank_model=ReRankModel.REMOTE_QWEN_3_8B,
+        rerank_model=ReRankModel.BGE_RERANKER_LARGE,
     )
 
-    print("METHOD", def_name)
     assert res[0]["document"]["file_id"] == "test_basket"
 
 
-def test_six_collections_remote_embedding_hybrid_search():
-    """_summary_
-    Create 6 collections with remote embedding model, add documents to each of these collections
-    and perform hybrid search on these collections, with the query being about hockey
-    Returns:
-        bool: True if hockey document is found, False otherwise
+def test_six_collections_remote_embedding_hybrid_search(collection_factory, hs):
     """
-    hybrid_search = HybridSearch(api_key=demo_api_key)
-    random_int_collections = []
-    collection_names = []
-    def_name = inspect.currentframe().f_code.co_name
-    num_collections = 6
+    Create 6 collections with remote embedding model, add documents to each
+    of these collections and perform hybrid search on these collections, with
+    the query being about hockey
+    """
     num_results = 8
-    for i in range(num_collections):
-        random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
-        collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(
-            collection_names[i], model_name=EmbeddingModel.REMOTE_QWEN_3_8B
-        )
+    collection_names = [
+        collection_factory(model_name=EmbeddingModel.REMOTE_QWEN_3_8B) for _ in range(6)
+    ]
 
-    doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
-    doc_dolci = setup_document("test_file_dolci", FilesTestsUrls.DOLCI)
-    doc_md_1 = setup_document("test_file_md_1", FilesTestsUrls.H3_HEADER)
-    doc_md_3 = setup_document("test_file_md_3", FilesTestsUrls.INSTALLATION)
-    doc_drawio = setup_document("test_drawio", FilesTestsUrls.DRAWIO)
-    doc_basket = setup_document("test_basket", FilesTestsUrls.BASKET)
-    doc_tennis = setup_document("test_tennis", FilesTestsUrls.TENNIS)
-    doc_videogames = setup_document("test_videogames", FilesTestsUrls.VIDEOGAMES)
-    doc_hockey = setup_document("test_hockey", FilesTestsUrls.HOCKEY)
-    doc_inline = setup_document("test_inline", FilesTestsUrls.INLINE_LINK)
+    ingest_documents(
+        hs, collection_names[0], ["test_drawio", "test_file_yugioh", "test_file_md_3"]
+    )
+    ingest_documents(hs, collection_names[1], ["test_file_dolci", "test_file_md_1"])
+    ingest_documents(
+        hs, collection_names[2], ["test_tennis", "test_hockey", "test_inline"]
+    )
+    ingest_documents(hs, collection_names[4], ["test_basket"])
+    ingest_documents(hs, collection_names[5], ["test_videogames"])
 
-    hybrid_search.create_document(collection_names[0], doc_drawio)
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-    hybrid_search.create_document(collection_names[1], doc_dolci)
-    hybrid_search.create_document(collection_names[1], doc_md_1)
-    hybrid_search.create_document(collection_names[0], doc_md_3)
-    hybrid_search.create_document(collection_names[4], doc_basket)
-    hybrid_search.create_document(collection_names[2], doc_tennis)
-    hybrid_search.create_document(collection_names[5], doc_videogames)
-    hybrid_search.create_document(collection_names[2], doc_hockey)
-    hybrid_search.create_document(collection_names[2], doc_inline)
-
-    collections = ",".join(collection_names)
-    print("COLLECTIONS", collections)
-    res = hybrid_search.hybrid_search(
-        collection_name=collections,
+    res = hs.hybrid_search(
+        collection_name=",".join(collection_names),
         query="cosa abbiamo sull' hockey?",
         num_results=num_results,
         ft_search_field="text",
         rerank=True,
-        rerank_model=ReRankModel.REMOTE_QWEN_3_8B,
+        rerank_model=ReRankModel.BGE_RERANKER_LARGE,
     )
 
-    print("METHOD", def_name)
     found_documents = [d["document"]["file_id"] for d in res]
     assert "test_hockey" in found_documents
 
 
-def test_six_collections_mixed_embedding_hybrid_search():
-    """_summary_
-    Create 6 collections with remote embedding model, add documents to each of these collections
-    and perform hybrid search on these collections, with the query being about hockey
-    Returns:
-        bool: True if hockey document is found, False otherwise
+def test_six_collections_mixed_embedding_hybrid_search(collection_factory, hs):
     """
-    hybrid_search = HybridSearch(api_key=demo_api_key)
-    random_int_collections = []
-    collection_names = []
-    def_name = inspect.currentframe().f_code.co_name
-    half_num_collections = 3
+    Create 3 collections with remote embedding model and 3 with internal
+    embedding model, add documents to each of these collections and perform
+    hybrid search on these collections, with the query being about hockey
+    """
     num_results = 8
-    for i in range(half_num_collections):
-        random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
-        collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(
-            collection_names[i], model_name=EmbeddingModel.REMOTE_QWEN_3_8B
-        )
-    for i in range(half_num_collections):
-        random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
-        collection_names.append(
-            f"test_collection_{random_int_collections[i + half_num_collections]}"
-        )
-        hybrid_search.create_collection(
-            collection_names[i + half_num_collections],
-            model_name=EmbeddingModel.MULTILINGUAL_E5_SMALL,
-        )
+    collection_names = [
+        collection_factory(model_name=EmbeddingModel.REMOTE_QWEN_3_8B) for _ in range(3)
+    ]
+    collection_names.extend(collection_factory() for _ in range(3))
 
-    doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
-    doc_dolci = setup_document("test_file_dolci", FilesTestsUrls.DOLCI)
-    doc_md_1 = setup_document("test_file_md_1", FilesTestsUrls.H3_HEADER)
-    doc_md_3 = setup_document("test_file_md_3", FilesTestsUrls.INSTALLATION)
-    doc_drawio = setup_document("test_drawio", FilesTestsUrls.DRAWIO)
-    doc_basket = setup_document("test_basket", FilesTestsUrls.BASKET)
-    doc_tennis = setup_document("test_tennis", FilesTestsUrls.TENNIS)
-    doc_videogames = setup_document("test_videogames", FilesTestsUrls.VIDEOGAMES)
-    doc_hockey = setup_document("test_hockey", FilesTestsUrls.HOCKEY)
-    doc_inline = setup_document("test_inline", FilesTestsUrls.INLINE_LINK)
+    ingest_documents(
+        hs, collection_names[0], ["test_drawio", "test_file_yugioh", "test_file_md_3"]
+    )
+    ingest_documents(hs, collection_names[1], ["test_file_dolci", "test_file_md_1"])
+    ingest_documents(
+        hs, collection_names[2], ["test_tennis", "test_hockey", "test_inline"]
+    )
+    ingest_documents(hs, collection_names[4], ["test_basket"])
+    ingest_documents(hs, collection_names[5], ["test_videogames"])
 
-    hybrid_search.create_document(collection_names[0], doc_drawio)
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-    hybrid_search.create_document(collection_names[1], doc_dolci)
-    hybrid_search.create_document(collection_names[1], doc_md_1)
-    hybrid_search.create_document(collection_names[0], doc_md_3)
-    hybrid_search.create_document(collection_names[4], doc_basket)
-    hybrid_search.create_document(collection_names[2], doc_tennis)
-    hybrid_search.create_document(collection_names[5], doc_videogames)
-    hybrid_search.create_document(collection_names[2], doc_hockey)
-    hybrid_search.create_document(collection_names[2], doc_inline)
-
-    collections = ",".join(collection_names)
-    print("COLLECTIONS", collections)
-    res = hybrid_search.hybrid_search(
-        collection_name=collections,
+    res = hs.hybrid_search(
+        collection_name=",".join(collection_names),
         query="cosa abbiamo sull' hockey?",
         num_results=num_results,
         ft_search_field="text",
         rerank=True,
-        rerank_model=ReRankModel.REMOTE_QWEN_3_8B,
+        rerank_model=ReRankModel.BGE_RERANKER_LARGE,
     )
 
-    print("METHOD", def_name)
     found_documents = [d["document"]["file_id"] for d in res]
     assert "test_hockey" in found_documents
 
 
-def test_six_collections_mixed_embedding_semantic_search():
-    """_summary_
-    Create 6 collections with remote embedding model, add documents to each of these collections
-    and perform hybrid search on these collections, with the query being about hockey
-    Returns:
-        bool: True if hockey document is found, False otherwise
+def test_six_collections_mixed_embedding_semantic_search(collection_factory, hs):
     """
-    hybrid_search = HybridSearch(api_key=demo_api_key)
-    random_int_collections = []
-    collection_names = []
-    def_name = inspect.currentframe().f_code.co_name
-    half_num_collections = 3
+    Create 3 collections with remote embedding model and 3 with internal
+    embedding model, add documents to each of these collections and perform
+    semantic search on these collections, with the query being about hockey
+    """
     num_results = 8
-    for i in range(half_num_collections):
-        random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
-        collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(
-            collection_names[i], model_name=EmbeddingModel.REMOTE_QWEN_3_8B
-        )
-    for i in range(half_num_collections):
-        random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
-        collection_names.append(
-            f"test_collection_{random_int_collections[i + half_num_collections]}"
-        )
-        hybrid_search.create_collection(
-            collection_names[i + half_num_collections],
-            model_name=EmbeddingModel.MULTILINGUAL_E5_SMALL,
-        )
+    collection_names = [
+        collection_factory(model_name=EmbeddingModel.REMOTE_QWEN_3_8B) for _ in range(3)
+    ]
+    collection_names.extend(collection_factory() for _ in range(3))
 
-    doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
-    doc_dolci = setup_document("test_file_dolci", FilesTestsUrls.DOLCI)
-    doc_md_1 = setup_document("test_file_md_1", FilesTestsUrls.H3_HEADER)
-    doc_md_3 = setup_document("test_file_md_3", FilesTestsUrls.INSTALLATION)
-    doc_drawio = setup_document("test_drawio", FilesTestsUrls.DRAWIO)
-    doc_basket = setup_document("test_basket", FilesTestsUrls.BASKET)
-    doc_tennis = setup_document("test_tennis", FilesTestsUrls.TENNIS)
-    doc_videogames = setup_document("test_videogames", FilesTestsUrls.VIDEOGAMES)
-    doc_hockey = setup_document("test_hockey", FilesTestsUrls.HOCKEY)
-    doc_inline = setup_document("test_inline", FilesTestsUrls.INLINE_LINK)
+    ingest_documents(
+        hs, collection_names[0], ["test_drawio", "test_file_yugioh", "test_file_md_3"]
+    )
+    ingest_documents(hs, collection_names[1], ["test_file_dolci", "test_file_md_1"])
+    ingest_documents(
+        hs, collection_names[2], ["test_tennis", "test_hockey", "test_inline"]
+    )
+    ingest_documents(hs, collection_names[4], ["test_basket"])
+    ingest_documents(hs, collection_names[5], ["test_videogames"])
 
-    hybrid_search.create_document(collection_names[0], doc_drawio)
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-    hybrid_search.create_document(collection_names[1], doc_dolci)
-    hybrid_search.create_document(collection_names[1], doc_md_1)
-    hybrid_search.create_document(collection_names[0], doc_md_3)
-    hybrid_search.create_document(collection_names[4], doc_basket)
-    hybrid_search.create_document(collection_names[2], doc_tennis)
-    hybrid_search.create_document(collection_names[5], doc_videogames)
-    hybrid_search.create_document(collection_names[2], doc_hockey)
-    hybrid_search.create_document(collection_names[2], doc_inline)
-
-    collections = ",".join(collection_names)
-    print("COLLECTIONS", collections)
-    res = hybrid_search.semantic_search(
-        collection_name=collections,
+    res = hs.semantic_search(
+        collection_name=",".join(collection_names),
         query="cosa abbiamo sull' hockey?",
         num_results=num_results,
         rerank=True,
-        rerank_model=ReRankModel.REMOTE_QWEN_3_8B,
+        rerank_model=ReRankModel.BGE_RERANKER_LARGE,
     )
 
-    print("METHOD", def_name)
     found_documents = [d["document"]["file_id"] for d in res]
     assert "test_hockey" in found_documents
 
 
-def test_three_collections_remote_embedding_hybrid_search_videogames():
-    """_summary_
-    Create 3 collections with remote embedding model, add documents to each of these collections
-    and perform hybrid search on these collections, with the query being about videogames
-    Returns:
-        bool: True if videogames document is found, False otherwise
+def test_three_collections_remote_embedding_hybrid_search_videogames(
+    collection_factory, hs
+):
     """
-    hybrid_search = HybridSearch(api_key=demo_api_key)
-    random_int_collections = []
-    collection_names = []
-    def_name = inspect.currentframe().f_code.co_name
-    num_collections = 3
+    Create 3 collections with remote embedding model, add documents to each
+    of these collections and perform hybrid search on these collections, with
+    the query being about videogames
+    """
     num_results = 8
-    for i in range(num_collections):
-        random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
-        collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(
-            collection_names[i], model_name=EmbeddingModel.REMOTE_QWEN_3_8B
-        )
+    collection_names = [
+        collection_factory(model_name=EmbeddingModel.REMOTE_QWEN_3_8B) for _ in range(3)
+    ]
 
-    doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
-    doc_dolci = setup_document("test_file_dolci", FilesTestsUrls.DOLCI)
-    doc_md_1 = setup_document("test_file_md_1", FilesTestsUrls.H3_HEADER)
-    doc_md_3 = setup_document("test_file_md_3", FilesTestsUrls.INSTALLATION)
-    doc_drawio = setup_document("test_drawio", FilesTestsUrls.DRAWIO)
-    doc_basket = setup_document("test_basket", FilesTestsUrls.BASKET)
-    doc_tennis = setup_document("test_tennis", FilesTestsUrls.TENNIS)
-    doc_videogames = setup_document("test_videogames", FilesTestsUrls.VIDEOGAMES)
-    doc_hockey = setup_document("test_hockey", FilesTestsUrls.HOCKEY)
-    doc_inline = setup_document("test_inline", FilesTestsUrls.INLINE_LINK)
+    ingest_documents(
+        hs,
+        collection_names[0],
+        ["test_drawio", "test_file_yugioh", "test_file_md_3", "test_videogames"],
+    )
+    ingest_documents(hs, collection_names[1], ["test_file_dolci", "test_file_md_1"])
+    ingest_documents(
+        hs,
+        collection_names[2],
+        ["test_basket", "test_tennis", "test_hockey", "test_inline"],
+    )
 
-    hybrid_search.create_document(collection_names[0], doc_drawio)
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-    hybrid_search.create_document(collection_names[1], doc_dolci)
-    hybrid_search.create_document(collection_names[1], doc_md_1)
-    hybrid_search.create_document(collection_names[0], doc_md_3)
-    hybrid_search.create_document(collection_names[2], doc_basket)
-    hybrid_search.create_document(collection_names[2], doc_tennis)
-    hybrid_search.create_document(collection_names[0], doc_videogames)
-    hybrid_search.create_document(collection_names[2], doc_hockey)
-    hybrid_search.create_document(collection_names[2], doc_inline)
-
-    collections = ",".join(collection_names)
-    print("COLLECTIONS", collections)
-    res = hybrid_search.hybrid_search(
-        collection_name=collections,
+    res = hs.hybrid_search(
+        collection_name=",".join(collection_names),
         query="cosa abbiamo sul videogame Monkey Island?",
         num_results=num_results,
         ft_search_field="text",
         rerank=True,
-        rerank_model=ReRankModel.REMOTE_QWEN_3_8B,
+        rerank_model=ReRankModel.BGE_RERANKER_LARGE,
     )
 
-    print("METHOD", def_name)
     found_documents = [d["document"]["file_id"] for d in res]
     assert "test_videogames" in found_documents
 
 
-def test_three_collections_mixed_embedding_hybrid_search_videogames():
-    """_summary_
-    Create 3 collections with remote embedding model, add documents to each of these collections
-    and perform hybrid search on these collections, with the query being about videogames
-    Returns:
-        bool: True if videogames document is found, False otherwise
+def test_three_collections_mixed_embedding_hybrid_search_videogames(
+    collection_factory, hs
+):
     """
-    hybrid_search = HybridSearch(api_key=demo_api_key)
-    random_int_collections = []
-    collection_names = []
-    def_name = inspect.currentframe().f_code.co_name
-    num_collections = 3
+    Create 2 collections with remote embedding model and 1 with internal
+    embedding model, add documents to each of these collections and perform
+    hybrid search on these collections, with the query being about videogames
+    """
     num_results = 8
-    for i in range(num_collections - 1):
-        random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
-        collection_names.append(f"test_collection_{random_int_collections[i]}")
-        hybrid_search.create_collection(
-            collection_names[i], model_name=EmbeddingModel.REMOTE_QWEN_3_8B
-        )
-    random_int_collections.append(randint(1000000, 100000000))  # noqa: PERF401
-    collection_names.append(
-        f"test_collection_{random_int_collections[num_collections - 1]}"
+    collection_names = [
+        collection_factory(model_name=EmbeddingModel.REMOTE_QWEN_3_8B) for _ in range(2)
+    ]
+    collection_names.append(collection_factory())
+
+    ingest_documents(
+        hs,
+        collection_names[0],
+        ["test_drawio", "test_file_yugioh", "test_file_md_3", "test_videogames"],
     )
-    hybrid_search.create_collection(
-        collection_names[num_collections - 1],
-        model_name=EmbeddingModel.MULTILINGUAL_E5_SMALL,
+    ingest_documents(hs, collection_names[1], ["test_file_dolci", "test_file_md_1"])
+    ingest_documents(
+        hs,
+        collection_names[2],
+        ["test_basket", "test_tennis", "test_hockey", "test_inline"],
     )
 
-    doc_yugioh = setup_document("test_file_yugioh", FilesTestsUrls.YUGIOH)
-    doc_dolci = setup_document("test_file_dolci", FilesTestsUrls.DOLCI)
-    doc_md_1 = setup_document("test_file_md_1", FilesTestsUrls.H3_HEADER)
-    doc_md_3 = setup_document("test_file_md_3", FilesTestsUrls.INSTALLATION)
-    doc_drawio = setup_document("test_drawio", FilesTestsUrls.DRAWIO)
-    doc_basket = setup_document("test_basket", FilesTestsUrls.BASKET)
-    doc_tennis = setup_document("test_tennis", FilesTestsUrls.TENNIS)
-    doc_videogames = setup_document("test_videogames", FilesTestsUrls.VIDEOGAMES)
-    doc_hockey = setup_document("test_hockey", FilesTestsUrls.HOCKEY)
-    doc_inline = setup_document("test_inline", FilesTestsUrls.INLINE_LINK)
-
-    hybrid_search.create_document(collection_names[0], doc_drawio)
-    hybrid_search.create_document(collection_names[0], doc_yugioh)
-    hybrid_search.create_document(collection_names[1], doc_dolci)
-    hybrid_search.create_document(collection_names[1], doc_md_1)
-    hybrid_search.create_document(collection_names[0], doc_md_3)
-    hybrid_search.create_document(collection_names[2], doc_basket)
-    hybrid_search.create_document(collection_names[2], doc_tennis)
-    hybrid_search.create_document(collection_names[0], doc_videogames)
-    hybrid_search.create_document(collection_names[2], doc_hockey)
-    hybrid_search.create_document(collection_names[2], doc_inline)
-
-    collections = ",".join(collection_names)
-    print("COLLECTIONS", collections)
-    res = hybrid_search.hybrid_search(
-        collection_name=collections,
+    res = hs.hybrid_search(
+        collection_name=",".join(collection_names),
         query="cosa abbiamo sul videogame Monkey Island?",
         num_results=num_results,
         ft_search_field="text",
         rerank=True,
+        rerank_model=ReRankModel.BGE_RERANKER_LARGE,
+    )
+
+    found_documents = [d["document"]["file_id"] for d in res]
+    assert "test_videogames" in found_documents
+
+
+def test_three_collections_internal_embedding_remote_reranker(collection_factory, hs):
+    """
+    Create 3 collections with internal embedding model, add documents to each
+    of these collections and perform semantic search reranked with the REMOTE
+    reranker. Requires FIREWORKS_APIKEY to be configured in the service
+    environment; the local-reranker equivalents above do not.
+    """
+    num_results = 8
+    collection_names = [collection_factory() for _ in range(3)]
+
+    ingest_documents(
+        hs,
+        collection_names[0],
+        ["test_drawio", "test_file_yugioh", "test_file_md_3", "test_videogames"],
+    )
+    ingest_documents(hs, collection_names[1], ["test_file_dolci", "test_file_md_1"])
+    ingest_documents(
+        hs,
+        collection_names[2],
+        ["test_basket", "test_tennis", "test_hockey", "test_inline"],
+    )
+
+    res = hs.semantic_search(
+        collection_name=",".join(collection_names),
+        query="cosa abbiamo su tennis?",
+        num_results=num_results,
+        rerank=True,
         rerank_model=ReRankModel.REMOTE_QWEN_3_8B,
     )
 
-    print("METHOD", def_name)
-    found_documents = [d["document"]["file_id"] for d in res]
-    assert "test_videogames" in found_documents
+    assert res[0]["document"]["file_id"] == "test_tennis"
+
+
+# ---------------------------------------------------------------------------
+# Regression tests for the correctness fixes in the microservice
+# ---------------------------------------------------------------------------
+
+
+def test_num_results_gt10_internal_semantic_search(large_internal_collection, hs):
+    """
+    Regression: internal-model searches were capped at Typesense's default
+    per_page (10), silently ignoring num_results > 10 and shrinking the
+    rerank candidate pool
+    """
+    res = hs.semantic_search(
+        collection_name=large_internal_collection,
+        query="sport",
+        num_results=15,
+    )
+
+    assert 10 < len(res) <= 15
+
+
+def test_semantic_search_excludes_embedding(large_internal_collection, hs):
+    """
+    Regression: the semantic search internal path did not exclude the
+    embedding field, shipping raw embedding vectors in every hit
+    """
+    res = hs.semantic_search(
+        collection_name=large_internal_collection,
+        query="cosa abbiamo su tennis?",
+        num_results=5,
+    )
+
+    assert res
+    assert all("embedding" not in hit["document"] for hit in res)
+
+
+def test_filter_in_operator(large_internal_collection, hs):
+    """
+    Regression: IN filters were built with a plain f-string, producing
+    malformed filter_by clauses for operators like IN
+    """
+    res = hs.hybrid_search(
+        collection_name=large_internal_collection,
+        query="sport",
+        num_results=10,
+        ft_search_field="text",
+        filters=[
+            Filter(
+                field="file_id",
+                operator=Operator.IN,
+                value=["test_tennis", "test_basket"],
+            )
+        ],
+    )
+
+    assert res
+    assert all(
+        hit["document"]["file_id"] in {"test_tennis", "test_basket"} for hit in res
+    )
+
+
+def test_mxbai_reranker(large_internal_collection, hs):
+    """
+    Regression: the mxbai reranker raised TypeError on every call (wrong
+    unpacking of the CrossEncoder.rank result) and was silently skipped
+    """
+    res = hs.semantic_search(
+        collection_name=large_internal_collection,
+        query="cosa abbiamo su tennis?",
+        num_results=5,
+        rerank=True,
+        rerank_model=ReRankModel.MXBAI_RERANKER_LARGE,
+    )
+
+    assert res
+    assert res[0]["document"]["file_id"] == "test_tennis"
+
+
+def test_invalid_num_results(large_internal_collection, hs):
+    """
+    num_results outside [1, 100] must be rejected with a clean client error
+    """
+    with pytest.raises(InvalidRequest):
+        hs.semantic_search(
+            collection_name=large_internal_collection,
+            query="sport",
+            num_results=0,
+        )
+    with pytest.raises(InvalidRequest):
+        hs.semantic_search(
+            collection_name=large_internal_collection,
+            query="sport",
+            num_results=101,
+        )
+
+
+def test_invalid_overlap_size(hs):
+    """
+    overlap_size >= chunk_size must be rejected: the naive chunker buffer
+    would never shrink, producing duplicated chunks
+    """
+    document = Document(
+        preprocessing=Preprocessing(chunk_size=10, overlap_size=10),
+        default_fields=DocumentInformations(file_id="test_invalid_overlap"),
+        file=DEMO_DOCS["test_tennis"],
+        fields={},
+    )
+    with pytest.raises(InvalidRequest):
+        hs.create_document("any_collection", document)

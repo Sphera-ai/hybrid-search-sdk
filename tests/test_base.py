@@ -16,7 +16,6 @@ from hybridsearch import (
 from hybridsearch.exceptions import (
     CollectionAlreadyExists,
     CollectionNotFound,
-    InvalidApiKey,
 )
 from hybridsearch.models import Filter, Operator
 
@@ -39,17 +38,11 @@ def test_init():
 
 def test_invalid_key():
     """
-    This function tests the __init__ function of the HybridSearch class
-    It assert that the object is created successfully without any exceptions
+    The service must reject an invalid API key and accept the valid one
     """
 
-    try:
-        HybridSearch(api_key="invalid")
-    except InvalidApiKey:
-        assert True
-    except Exception as e:
-        print(e)
-        assert False
+    assert not HybridSearch(api_key="invalid").check_api_key()
+    assert HybridSearch(api_key=demo_api_key).check_api_key()
 
 
 def test_document_collection():
@@ -181,7 +174,7 @@ def test_supported_documents():
     supported_documents = hybrid_search.get_supported_documents()
     assert isinstance(supported_documents, dict)
     assert len(supported_documents.keys()) > 0
-    assert len(supported_documents["supportd_extensions"]) > 0
+    assert len(supported_documents["supported_extensions"]) > 0
     assert len(supported_documents["supported_mimetypes"]) > 0
 
 
