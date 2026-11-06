@@ -26,9 +26,10 @@ class InvalidRequest(Exception):  # 406
 
 
 class ServerError(Exception):
-    def __init__(self, err_type, message):
+    def __init__(self, err_type, message, status_code: int | None = None):
         self.message = message
         self.err_type = err_type
+        self.status_code = status_code
         super().__init__(message)
 
     def __str__(self):

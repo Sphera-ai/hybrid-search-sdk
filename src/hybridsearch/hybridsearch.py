@@ -30,6 +30,65 @@ class _TimeoutSession(req.Session):
 
 session: req.Session = _TimeoutSession()
 
+# Error bodies are embedded in exceptions surfaced to callers, so keep them
+# short: a proxy or gateway can answer with a whole HTML page.
+MAX_ERROR_BODY_CHARS = 512
+
+
+def _body_snippet(response: req.Response) -> str:
+    """Return a short, single-line excerpt of a response body."""
+    try:
+        text = response.text
+    except Exception:  # pragma: no cover - defensive, requests never raises here
+        return ""
+
+    text = " ".join(text.split())
+    if len(text) > MAX_ERROR_BODY_CHARS:
+        text = f"{text[:MAX_ERROR_BODY_CHARS]}..."
+    return text
+
+
+def _server_error_from_response(response: req.Response) -> ServerError:
+    """Build a ServerError out of a failed HTTP response.
+
+    The service normally answers with
+    ``{"detail": {"error_type": ..., "strerror": ...}}``, but gateways,
+    proxies and crashes can return an empty or non-JSON body. Parsing must
+    never raise a JSONDecodeError that hides the real HTTP failure.
+    """
+    try:
+        payload = response.json()
+    except ValueError:
+        payload = None
+
+    detail = payload.get("detail") if isinstance(payload, dict) else None
+
+    if isinstance(detail, dict):
+        err_type = str(detail.get("error_type") or "unknown")
+        message = str(detail.get("strerror") or detail)
+    elif isinstance(detail, str) and detail.strip():
+        err_type = "unknown"
+        message = detail
+    else:
+        err_type = "http"
+        message = _body_snippet(response) or (
+            f"HTTP {response.status_code} {response.reason}".strip()
+        )
+
+    return ServerError(err_type, message, status_code=response.status_code)
+
+
+def _parse_json_response(response: req.Response):
+    """Decode a success response, reporting non-JSON bodies as ServerError."""
+    try:
+        return response.json()
+    except ValueError as exc:
+        raise ServerError(
+            "invalid_response",
+            f"Could not decode response body: {exc}",
+            status_code=response.status_code,
+        ) from exc
+
 
 class HybridSearch:
     def __init__(self, api_key: str, url: str = "http://localhost", port: int = 8002):
@@ -117,15 +176,13 @@ class HybridSearch:
 
         if response.status_code == 500:
             logger.error("Internal server error")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
         if response.status_code != 200:
             logger.error("Error calling the API")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
-        return response.json()
+        return _parse_json_response(response)
 
     def create_collection(
         self,
@@ -192,15 +249,13 @@ class HybridSearch:
 
         if response.status_code == 500:
             logger.error("Internal server error")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
         if response.status_code != 200:
             logger.error("Error calling the API")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
-        return response.json()
+        return _parse_json_response(response)
 
     def get_collection(self, collection_name: str):
         """This function returns the collection with the given name
@@ -227,10 +282,9 @@ class HybridSearch:
             raise CollectionNotFound("No collection found")
         elif response.status_code != 200:
             logger.error("Error calling the API")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
-        return response.json()
+        return _parse_json_response(response)
 
     def get_all_collections(self):
         """This function returns all the collections in the database
@@ -251,10 +305,9 @@ class HybridSearch:
             raise InvalidApiKey("Invalid API key")
         elif response.status_code != 200:
             logger.error("Error calling the API")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
-        return response.json()
+        return _parse_json_response(response)
 
     def create_document(
         self,
@@ -294,10 +347,9 @@ class HybridSearch:
 
         if response.status_code != 200:
             logger.error("Error calling the API")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
-        return response.json()
+        return _parse_json_response(response)
 
     def create_entry(self, collection_name: str, entry: Entry):
         """This function creates an entry in the specified collection.
@@ -330,10 +382,9 @@ class HybridSearch:
 
         if response.status_code != 200:
             logger.error("Error calling the API")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
-        return response.json()
+        return _parse_json_response(response)
 
     def delete_collection(self, collection_name: str):
         """This function deletes the collection with the given name.
@@ -359,8 +410,7 @@ class HybridSearch:
 
         if response.status_code != 200:
             logger.error("Error calling the API")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
         return True
 
@@ -404,8 +454,7 @@ class HybridSearch:
 
         if response.status_code != 200:
             logger.error("Error calling the API")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
         return True
 
@@ -449,8 +498,7 @@ class HybridSearch:
 
         if response.status_code != 200:
             logger.error("Error calling the API")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
         return True
 
@@ -516,10 +564,9 @@ class HybridSearch:
 
         if response.status_code != 200:
             logger.error("Error calling the API")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
-        return response.json()
+        return _parse_json_response(response)
 
     def hybrid_search(
         self,
@@ -588,10 +635,9 @@ class HybridSearch:
 
         if response.status_code != 200:
             logger.error("Error calling the API")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
-        return response.json()
+        return _parse_json_response(response)
 
     def get_model_names(self):
         """This function returns the model names that can be used to embed.
@@ -610,10 +656,9 @@ class HybridSearch:
 
         if response.status_code != 200:
             logger.error("Error calling the API")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
-        return response.json()
+        return _parse_json_response(response)
 
     def get_rerank_model_names(self):
         """This function returns the model names that can be used to rerank.
@@ -632,10 +677,9 @@ class HybridSearch:
 
         if response.status_code != 200:
             logger.error("Error calling the API")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
-        return response.json()
+        return _parse_json_response(response)
 
     def get_supported_documents(self):
         """This function returns the supported documents that can be added to a document collection.
@@ -654,7 +698,6 @@ class HybridSearch:
 
         if response.status_code != 200:
             logger.error("Error calling the API")
-            error = response.json()["detail"]
-            raise ServerError(error["error_type"], error["strerror"])
+            raise _server_error_from_response(response)
 
-        return response.json()
+        return _parse_json_response(response)
